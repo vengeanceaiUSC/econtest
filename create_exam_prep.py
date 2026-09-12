@@ -619,9 +619,10 @@ for i, (ch, cat) in enumerate(categories_order, 2):
         ws5.cell(row=i, column=c).border = BORDER
 set_col_widths(ws5, [10, 32, 14, 20, 50])
 
-out = "/workspace/Exam Prep.xlsx"
-wb.save(out)
-print(f"Saved: {out}")
-print(f"Total questions in bank: {len(QUESTIONS)}")
-print(f"Practice set: {len(PRACTICE_IDS)} questions")
-print(f"Practice tests: {len(PRACTICE_TESTS)} simulation exams (24 Q each)")
+if __name__ == "__main__":
+    out = "/workspace/Exam Prep.xlsx"
+    wb.save(out)
+    print(f"Saved: {out}")
+    print(f"Total questions in bank: {len(QUESTIONS)}")
+    print(f"Practice set: {len(PRACTICE_IDS)} questions")
+    print(f"Practice tests: {len(PRACTICE_TESTS)} simulation exams (24 Q each)")

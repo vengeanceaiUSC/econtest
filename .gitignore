@@ -1,3 +1,5 @@
 __pycache__/
 exam_prep_images/
 *.pyc
+app/node_modules/
+app/dist/
