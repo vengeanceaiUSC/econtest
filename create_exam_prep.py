@@ -437,24 +437,25 @@ set_col_widths(ws0, [14, 32, 12, 50])
 
 # ── Sheet: Study Sets (teacher breakdown) ───────────────────────────────────
 STUDY_SET_ROWS = [
-    (1, 4, "Consumer Problems", 2, "Q1, Q2", [1, 2]),
-    (2, 4, "Labor-Leisure", 2, "Q3, Q4", [3, 4]),
-    (3, 4, "Intertemporal Consumption", 2, "Q5, Q6", [5, 6]),
-    (4, 4, "Elasticity / Types of Goods", 3, "Q7, Q8, Q9", [7, 8, 9]),
-    (5, 4, "Budget Line", 1, "Q10", [10]),
-    (6, 4, "Assumptions / Preferences", 2, "Q11, Q12", [11, 12]),
-    (7, 9, "Insurance Problems", 5, "Q13–Q17", [13, 14, 15, 16, 17]),
-    (8, 9, "Risk Attitudes", 4, "Q18–Q21", [18, 19, 20, 21]),
-    (9, 9, "Certainty Equivalent & Risk Premium", 2, "Q22, Q23", [22, 23]),
-    (10, 9, "Diversification", 1, "Q24", [24]),
+    (1, 4, "Consumer Problems", 2, "Q1, Q2", [1, 2], "01_Consumer_Problems.pdf"),
+    (2, 4, "Labor-Leisure", 2, "Q3, Q4", [3, 4], "02_Labor_Leisure.pdf"),
+    (3, 4, "Intertemporal Consumption", 2, "Q5, Q6", [5, 6], "03_Intertemporal_Consumption.pdf"),
+    (4, 4, "Elasticity / Types of Goods", 3, "Q7, Q8, Q9", [7, 8, 9], "04_Elasticity_Types_of_Goods.pdf"),
+    (5, 4, "Budget Line", 1, "Q10", [10], "05_Budget_Line.pdf"),
+    (6, 4, "Assumptions / Preferences", 2, "Q11, Q12", [11, 12], "06_Assumptions_Preferences.pdf"),
+    (7, 9, "Insurance Problems", 5, "Q13–Q17", [13, 14, 15, 16, 17], "07_Insurance_Problems.pdf"),
+    (8, 9, "Risk Attitudes", 4, "Q18–Q21", [18, 19, 20, 21], "08_Risk_Attitudes.pdf"),
+    (9, 9, "Certainty Equivalent & Risk Premium", 2, "Q22, Q23", [22, 23], "09_Certainty_Equivalent_Risk_Premium.pdf"),
+    (10, 9, "Diversification", 1, "Q24", [24], "10_Diversification.pdf"),
 ]
 ws_sets = wb.create_sheet("Study Sets", 1)
-set_headers = ["Set #", "Chapter", "Category", "Questions in Set", "Practice Q IDs"]
+set_headers = ["Set #", "Chapter", "Category", "Questions in Set", "Practice Q IDs", "PDF File"]
 for c, h in enumerate(set_headers, 1):
     ws_sets.cell(row=1, column=c, value=h)
 style_header_row(ws_sets, 1, len(set_headers))
 for i, row in enumerate(STUDY_SET_ROWS, 2):
-    for c, val in enumerate(row[:5], 1):
+    excel_vals = [row[0], row[1], row[2], row[3], row[4], row[6]]
+    for c, val in enumerate(excel_vals, 1):
         cell = ws_sets.cell(row=i, column=c, value=val)
         cell.fill = CH4_FILL if row[1] == 4 else CH9_FILL
         cell.alignment = WRAP
@@ -466,7 +467,8 @@ ws_sets.cell(row=tr, column=2, value="Total")
 ws_sets.cell(row=tr, column=3, value="Ch.4 = 12 | Ch.9 = 12")
 ws_sets.cell(row=tr, column=4, value=24)
 ws_sets.cell(row=tr, column=5, value="Q1–Q24")
-set_col_widths(ws_sets, [8, 10, 36, 16, 20])
+ws_sets.cell(row=tr, column=6, value="practice_sets/ (10 PDFs + Formula_Sheet.pdf)")
+set_col_widths(ws_sets, [8, 10, 36, 16, 20, 38])
 ws_sets.freeze_panes = "A2"
 
 # ── Sheet 2: Full Question Bank ─────────────────────────────────────────────
@@ -496,7 +498,7 @@ for c, h in enumerate(practice_headers, 1):
 style_header_row(ws2, 1, len(practice_headers))
 
 SET_FOR_Q = {}
-for set_num, ch, cat, cnt, _, qids in STUDY_SET_ROWS:
+for set_num, ch, cat, cnt, _, qids, _pdf in STUDY_SET_ROWS:
     for j, qn in enumerate(qids, 1):
         SET_FOR_Q[qn] = (set_num, j, cnt, cat)
 

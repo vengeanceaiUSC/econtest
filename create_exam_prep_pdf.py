@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Generate Exam Prep PDF — organized by teacher's category sets with source screenshots."""
+"""Generate focused practice-set PDFs — one file per category with exact question counts."""
 
 import os
+import re
 import pymupdf
 
 UPLOADS = "/home/ubuntu/.cursor/projects/workspace/uploads"
 OUT_DIR = "/workspace/exam_prep_images"
-OUT_PDF = "/workspace/Exam_Prep.pdf"
+PDF_OUT_DIR = "/workspace/practice_sets"
 
 PDFS = {
     "HW1": f"{UPLOADS}/Homework_1__Chapter_4__9bce.pdf",
@@ -18,22 +19,24 @@ PDFS = {
 
 DPI = 132
 JPEG_QUALITY = 78
-os.makedirs(OUT_DIR, exist_ok=True)
+PW, PH = 612, 792
+COLOR = (0.12, 0.31, 0.47)
+MUTED = (0.45, 0.45, 0.45)
 
-# Teacher's study set structure — order and counts per category
+os.makedirs(OUT_DIR, exist_ok=True)
+os.makedirs(PDF_OUT_DIR, exist_ok=True)
+
 STUDY_SETS = [
-    # Chapter 4 — 12 questions
-    {"ch": 4, "category": "Consumer Problems", "count": 2, "ids": [1, 2]},
-    {"ch": 4, "category": "Labor-Leisure", "count": 2, "ids": [3, 4]},
-    {"ch": 4, "category": "Intertemporal Consumption", "count": 2, "ids": [5, 6]},
-    {"ch": 4, "category": "Elasticity / Types of Goods", "count": 3, "ids": [7, 8, 9]},
-    {"ch": 4, "category": "Budget Line", "count": 1, "ids": [10]},
-    {"ch": 4, "category": "Assumptions / Preferences", "count": 2, "ids": [11, 12]},
-    # Chapter 9 — 12 questions
-    {"ch": 9, "category": "Insurance Problems", "count": 5, "ids": [13, 14, 15, 16, 17]},
-    {"ch": 9, "category": "Risk Attitudes", "count": 4, "ids": [18, 19, 20, 21]},
-    {"ch": 9, "category": "Certainty Equivalent & Risk Premium", "count": 2, "ids": [22, 23]},
-    {"ch": 9, "category": "Diversification", "count": 1, "ids": [24]},
+    {"slug": "01_Consumer_Problems", "ch": 4, "category": "Consumer Problems", "count": 2, "ids": [1, 2]},
+    {"slug": "02_Labor_Leisure", "ch": 4, "category": "Labor-Leisure", "count": 2, "ids": [3, 4]},
+    {"slug": "03_Intertemporal_Consumption", "ch": 4, "category": "Intertemporal Consumption", "count": 2, "ids": [5, 6]},
+    {"slug": "04_Elasticity_Types_of_Goods", "ch": 4, "category": "Elasticity / Types of Goods", "count": 3, "ids": [7, 8, 9]},
+    {"slug": "05_Budget_Line", "ch": 4, "category": "Budget Line", "count": 1, "ids": [10]},
+    {"slug": "06_Assumptions_Preferences", "ch": 4, "category": "Assumptions / Preferences", "count": 2, "ids": [11, 12]},
+    {"slug": "07_Insurance_Problems", "ch": 9, "category": "Insurance Problems", "count": 5, "ids": [13, 14, 15, 16, 17]},
+    {"slug": "08_Risk_Attitudes", "ch": 9, "category": "Risk Attitudes", "count": 4, "ids": [18, 19, 20, 21]},
+    {"slug": "09_Certainty_Equivalent_Risk_Premium", "ch": 9, "category": "Certainty Equivalent & Risk Premium", "count": 2, "ids": [22, 23]},
+    {"slug": "10_Diversification", "ch": 9, "category": "Diversification", "count": 1, "ids": [24]},
 ]
 
 QUESTION_INFO = {
@@ -87,6 +90,16 @@ FORMULA_CH9 = [
     "Insurance RP: P_max - P_fair",
     "Diversify: negative correlation lowers variance",
 ]
+
+
+def validate_counts():
+    total = sum(s["count"] for s in STUDY_SETS)
+    assert total == 24, f"Expected 24 questions, got {total}"
+    ch4 = sum(s["count"] for s in STUDY_SETS if s["ch"] == 4)
+    ch9 = sum(s["count"] for s in STUDY_SETS if s["ch"] == 9)
+    assert ch4 == 12 and ch9 == 12
+    for i, s in enumerate(STUDY_SETS, 1):
+        assert len(s["ids"]) == s["count"], f"Set {i} count mismatch: {s['count']} vs {len(s['ids'])}"
 
 
 def render_page(pdf_key, page_1based, tag=""):
@@ -161,125 +174,161 @@ def images_for(qnum):
     return m[qnum]()
 
 
-def section_page(out, ch, category, count, set_num):
-    pw, ph = 612, 792
-    p = out.new_page(width=pw, height=ph)
-    color = (0.12, 0.31, 0.47)
-    p.insert_text((72, 280), f"CHAPTER {ch}", fontsize=22, fontname="helv", color=color)
-    p.insert_text((72, 320), category, fontsize=20, fontname="helv", color=color)
-    p.insert_text((72, 360), f"{count} question{'s' if count > 1 else ''}", fontsize=16, fontname="helv")
-    p.insert_text((72, 400), f"Study Set {set_num} of 10", fontsize=11, fontname="helv", color=(0.45, 0.45, 0.45))
-    ids = [q for s in STUDY_SETS if s["ch"] == ch and s["category"] == category for q in s["ids"]]
-    p.insert_text((72, 430), f"Questions: {', '.join(f'Q{i}' for i in ids)}", fontsize=11, fontname="helv", color=(0.45, 0.45, 0.45))
+def cover_page(out, set_num, study_set):
+    p = out.new_page(width=PW, height=PH)
+    p.insert_text((72, 120), "ECON 351 — Focused Practice Set", fontsize=20, fontname="helv")
+    p.insert_text((72, 160), f"Set {set_num} of 10", fontsize=12, fontname="helv", color=MUTED)
+    p.insert_text((72, 210), f"Chapter {study_set['ch']}", fontsize=22, fontname="helv", color=COLOR)
+    p.insert_text((72, 250), study_set["category"], fontsize=18, fontname="helv", color=COLOR)
+    n = study_set["count"]
+    p.insert_text((72, 300), f"{n} question{'s' if n != 1 else ''} in this practice set", fontsize=14, fontname="helv")
+    ids = ", ".join(f"Q{i}" for i in study_set["ids"])
+    p.insert_text((72, 330), f"Questions: {ids}", fontsize=11, fontname="helv", color=MUTED)
+    p.insert_text((72, 380), "Screenshots from original HW, sample questions, and mock midterm.", fontsize=10, fontname="helv", color=MUTED)
     return p
 
 
-def insert_image(out, img_path, header=None):
-    pw, ph = 612, 792
-    p = out.new_page(width=pw, height=ph)
-    y = 40
-    if header:
-        p.insert_text((40, y), header, fontsize=9, fontname="helv", color=(0.45, 0.45, 0.45))
-        y += 16
+def place_image_on_page(p, img_path, y_start, margin=36):
     pix = pymupdf.open(img_path)[0].get_pixmap(alpha=False)
-    m = 36
-    scale = min((pw - 2 * m) / pix.width, (ph - y - m) / pix.height)
+    scale = min((PW - 2 * margin) / pix.width, (PH - y_start - margin) / pix.height)
     w, h = pix.width * scale, pix.height * scale
-    p.insert_image(pymupdf.Rect(m, y, m + w, y + h), filename=img_path)
+    p.insert_image(pymupdf.Rect(margin, y_start, margin + w, y_start + h), filename=img_path)
+    return y_start + h + 12
 
 
-def formula_sheet_page(out):
-    pw, ph = 612, 792
-    p = out.new_page(width=pw, height=ph)
-    p.insert_text((40, 40), "ONE-PAGE FORMULA SHEET", fontsize=16, fontname="helv", color=(0.12, 0.31, 0.47))
+def add_question(out, study_set, set_num, qid, idx):
+    label, source = QUESTION_INFO[qid]
+    items = images_for(qid)
+    p = out.new_page(width=PW, height=PH)
+    p.insert_text((40, 42), f"Set {set_num}: {study_set['category']}", fontsize=10, fontname="helv", color=COLOR)
+    p.insert_text((40, 58), f"Question {idx} of {study_set['count']}  (Practice Q{qid})", fontsize=13, fontname="helv")
+    p.insert_text((40, 74), f"{label} — {source}", fontsize=9, fontname="helv", color=MUTED)
+    y = 92
+    img_i = 0
+    for item in items:
+        if isinstance(item, tuple) and item[0] == "text":
+            for line in item[1]:
+                p.insert_text((40, y), line, fontsize=11, fontname="helv")
+                y += 15
+        elif isinstance(item, str) and os.path.exists(item):
+            if y > PH - 120:
+                p = out.new_page(width=PW, height=PH)
+                p.insert_text((40, 42), f"Practice Q{qid} — continued", fontsize=10, fontname="helv", color=MUTED)
+                y = 60
+            y = place_image_on_page(p, item, y)
+            img_i += 1
+
+
+def build_study_set_pdf(study_set, set_num):
+    out = pymupdf.open()
+    cover_page(out, set_num, study_set)
+    for idx, qid in enumerate(study_set["ids"], 1):
+        add_question(out, study_set, set_num, qid, idx)
+    path = os.path.join(PDF_OUT_DIR, f"{study_set['slug']}.pdf")
+    out.save(path, garbage=4, deflate=True)
+    expected_pages = 1 + study_set["count"]  # cover + one page per question (min)
+    print(f"  {study_set['slug']}.pdf — {study_set['count']} Q, {len(out)} pages")
+    return path, len(out)
+
+
+def build_chapter_pdf(chapter):
+    sets = [s for s in STUDY_SETS if s["ch"] == chapter]
+    out = pymupdf.open()
+    p = out.new_page(width=PW, height=PH)
+    total = sum(s["count"] for s in sets)
+    p.insert_text((72, 140), f"ECON 351 — Chapter {chapter} Practice Set", fontsize=22, fontname="helv")
+    p.insert_text((72, 180), f"{total} questions total", fontsize=14, fontname="helv")
+    y = 220
+    for i, s in enumerate(sets, 1):
+        global_set = STUDY_SETS.index(s) + 1
+        line = f"Set {global_set}: {s['category']} ({s['count']})"
+        p.insert_text((72, y), line, fontsize=11, fontname="helv")
+        y += 16
+    set_num = 0
+    for s in sets:
+        set_num = STUDY_SETS.index(s) + 1
+        p = out.new_page(width=PW, height=PH)
+        p.insert_text((72, 300), s["category"], fontsize=18, fontname="helv", color=COLOR)
+        p.insert_text((72, 330), f"{s['count']} question{'s' if s['count'] != 1 else ''}", fontsize=12, fontname="helv")
+        for idx, qid in enumerate(s["ids"], 1):
+            add_question(out, s, set_num, qid, idx)
+    path = os.path.join(PDF_OUT_DIR, f"Chapter_{chapter}_All_{total}_Questions.pdf")
+    out.save(path, garbage=4, deflate=True)
+    print(f"  Chapter_{chapter}_All_{total}_Questions.pdf — {total} Q, {len(out)} pages")
+    return path
+
+
+def build_formula_pdf():
+    out = pymupdf.open()
+    p = out.new_page(width=PW, height=PH)
+    p.insert_text((40, 40), "ONE-PAGE FORMULA SHEET", fontsize=16, fontname="helv", color=COLOR)
     y = 70
-    p.insert_text((40, y), "CHAPTER 4 — Consumer Theory", fontsize=12, fontname="helv", color=(0.12, 0.31, 0.47))
+    p.insert_text((40, y), "CHAPTER 4 — Consumer Theory", fontsize=12, fontname="helv", color=COLOR)
     y += 20
     for line in FORMULA_CH4:
         p.insert_text((40, y), line, fontsize=9, fontname="helv")
         y += 13
     y += 10
-    p.insert_text((40, y), "CHAPTER 9 — Uncertainty & Risk", fontsize=12, fontname="helv", color=(0.12, 0.31, 0.47))
+    p.insert_text((40, y), "CHAPTER 9 — Uncertainty & Risk", fontsize=12, fontname="helv", color=COLOR)
     y += 20
     for line in FORMULA_CH9:
         p.insert_text((40, y), line, fontsize=9, fontname="helv")
         y += 13
+    path = os.path.join(PDF_OUT_DIR, "Formula_Sheet.pdf")
+    out.save(path, garbage=4, deflate=True)
+    print(f"  Formula_Sheet.pdf — 1 page")
+    return path
 
 
-def build_pdf():
-    out = pymupdf.open()
-    pw, ph = 612, 792
+def build_manifest():
+    lines = [
+        "ECON 351 — 24-Question Focused Study Set",
+        "=" * 50,
+        "",
+        "Each PDF below has EXACTLY the question count for that category.",
+        "",
+        "CHAPTER 4 (12 questions total)",
+        "  01_Consumer_Problems.pdf              2 questions",
+        "  02_Labor_Leisure.pdf                  2 questions",
+        "  03_Intertemporal_Consumption.pdf      2 questions",
+        "  04_Elasticity_Types_of_Goods.pdf      3 questions",
+        "  05_Budget_Line.pdf                    1 question",
+        "  06_Assumptions_Preferences.pdf        2 questions",
+        "  Chapter_4_All_12_Questions.pdf       12 questions (all Ch.4 sets)",
+        "",
+        "CHAPTER 9 (12 questions total)",
+        "  07_Insurance_Problems.pdf             5 questions",
+        "  08_Risk_Attitudes.pdf                 4 questions",
+        "  09_Certainty_Equivalent_Risk_Premium.pdf  2 questions",
+        "  10_Diversification.pdf                1 question",
+        "  Chapter_9_All_12_Questions.pdf       12 questions (all Ch.9 sets)",
+        "",
+        "REFERENCE",
+        "  Formula_Sheet.pdf                     1 page",
+        "",
+        "GRAND TOTAL: 24 practice questions across 10 category sets",
+    ]
+    path = os.path.join(PDF_OUT_DIR, "README.txt")
+    with open(path, "w") as f:
+        f.write("\n".join(lines) + "\n")
+    return path
 
-    # Cover
-    p = out.new_page(width=pw, height=ph)
-    p.insert_text((72, 140), "ECON 351 Exam Prep", fontsize=26, fontname="helv")
-    p.insert_text((72, 175), "24-Question Focused Study Set", fontsize=16, fontname="helv")
-    y = 220
-    p.insert_text((72, y), "Organized by teacher topic breakdown:", fontsize=11, fontname="helv")
-    y += 22
-    p.insert_text((72, y), "Ch.4 (12): 2 consumer | 2 labor-leisure | 2 intertemporal | 3 elasticity", fontsize=10, fontname="helv")
-    y += 16
-    p.insert_text((72, y), "         1 budget line | 2 preferences", fontsize=10, fontname="helv")
-    y += 16
-    p.insert_text((72, y), "Ch.9 (12): 5 insurance | 4 risk attitudes | 2 CE & RP | 1 diversification", fontsize=10, fontname="helv")
-    y += 30
-    p.insert_text((72, y), "Problems = screenshots from original HW, samples, mock midterm.", fontsize=10, fontname="helv", color=(0.45, 0.45, 0.45))
 
-    # Study plan table page
-    p = out.new_page(width=pw, height=ph)
-    p.insert_text((40, 50), "STUDY SET OVERVIEW", fontsize=16, fontname="helv", color=(0.12, 0.31, 0.47))
-    y = 80
-    current_ch = None
-    set_n = 0
-    for s in STUDY_SETS:
-        if s["ch"] != current_ch:
-            current_ch = s["ch"]
-            p.insert_text((40, y), f"--- Chapter {current_ch} ({sum(x['count'] for x in STUDY_SETS if x['ch']==current_ch)} questions) ---", fontsize=11, fontname="helv", color=(0.12, 0.31, 0.47))
-            y += 18
-        set_n += 1
-        ids = ", ".join(f"Q{i}" for i in s["ids"])
-        line = f"Set {set_n}: {s['category']} ({s['count']}) — {ids}"
-        p.insert_text((50, y), line, fontsize=10, fontname="helv")
-        y += 15
-
-    # Questions by study set
-    set_n = 0
-    current_ch = None
-    for s in STUDY_SETS:
-        set_n += 1
-        if s["ch"] != current_ch:
-            current_ch = s["ch"]
-            p = out.new_page(width=pw, height=ph)
-            p.insert_text((72, 360), f"CHAPTER {current_ch}", fontsize=28, fontname="helv", color=(0.12, 0.31, 0.47))
-            total = sum(x["count"] for x in STUDY_SETS if x["ch"] == current_ch)
-            p.insert_text((72, 400), f"{total} questions total", fontsize=14, fontname="helv")
-
-        section_page(out, s["ch"], s["category"], s["count"], set_n)
-
-        for idx, qid in enumerate(s["ids"], 1):
-            label, source = QUESTION_INFO[qid]
-            p = out.new_page(width=pw, height=ph)
-            p.insert_text((40, 45), f"Set {set_n}: {s['category']}", fontsize=10, fontname="helv", color=(0.12, 0.31, 0.47))
-            p.insert_text((40, 62), f"Q{qid} ({idx} of {s['count']}) — {label}", fontsize=13, fontname="helv")
-            p.insert_text((40, 78), source, fontsize=9, fontname="helv", color=(0.45, 0.45, 0.45))
-
-            items = images_for(qid)
-            y = 100
-            img_i = 0
-            for item in items:
-                if isinstance(item, tuple) and item[0] == "text":
-                    for line in item[1]:
-                        p.insert_text((40, y), line, fontsize=11, fontname="helv")
-                        y += 15
-                elif isinstance(item, str) and os.path.exists(item):
-                    hdr = f"Q{qid} — page {img_i + 1}" if img_i else None
-                    insert_image(out, item, hdr)
-                    img_i += 1
-
-    formula_sheet_page(out)
-    out.save(OUT_PDF, garbage=4, deflate=True)
-    print(f"Saved: {OUT_PDF} ({len(out)} pages)")
+def build_all():
+    validate_counts()
+    print("Building category practice PDFs (exact counts per type):")
+    built = []
+    for i, s in enumerate(STUDY_SETS, 1):
+        path, pages = build_study_set_pdf(s, i)
+        built.append((s["slug"], s["count"], pages))
+    print("\nBuilding chapter combined PDFs:")
+    build_chapter_pdf(4)
+    build_chapter_pdf(9)
+    build_formula_pdf()
+    build_manifest()
+    total_q = sum(c for _, c, _ in built)
+    print(f"\nDone: {len(built)} category PDFs, {total_q} questions, output in {PDF_OUT_DIR}/")
 
 
 if __name__ == "__main__":
-    build_pdf()
+    build_all()
