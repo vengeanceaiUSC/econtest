@@ -2,6 +2,7 @@
 """Create Exam Prep.xlsx — categorized question bank, 24-question practice set, formula sheet."""
 
 from openpyxl import Workbook
+from exam_config import EXAM_STRUCTURE, PRACTICE_TESTS
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 
@@ -344,35 +345,8 @@ QUESTIONS = [
      "Diversification reduces risk with negative correlation."),
 ]
 
-# Practice set: 24 questions matching user's breakdown
-PRACTICE_IDS = [
-    # Ch 4 (12)
-    "Q014",  # Consumer 1
-    "Q015",  # Consumer 2
-    "Q021",  # Labor-leisure 1
-    "Q022",  # Labor-leisure 2
-    "Q025",  # Intertemporal 1
-    "Q027",  # Intertemporal 2
-    "Q028",  # Elasticity 1
-    "Q032",  # Elasticity 2
-    "Q031",  # Elasticity 3
-    "Q008",  # Budget line 1
-    "Q002",  # Assumptions 1
-    "Q005",  # Assumptions 2
-    # Ch 9 (12)
-    "Q047",  # Insurance 1
-    "Q048",  # Insurance 2
-    "Q050",  # Insurance 3
-    "Q052",  # Insurance 4
-    "Q053",  # Insurance 5
-    "Q039",  # Risk attitudes 1
-    "Q040",  # Risk attitudes 2
-    "Q042",  # Risk attitudes 3
-    "Q045",  # Risk attitudes 4
-    "Q035",  # CE & RP 1
-    "Q036",  # CE & RP 2
-    "Q054",  # Diversification 1
-]
+# Primary practice set = Practice Test 1 (24 Q, exam format)
+PRACTICE_IDS = PRACTICE_TESTS[0]["ids"]
 
 PRACTICE_LABELS = {
     "Q014": "Consumer Problem #1",
@@ -423,7 +397,7 @@ overview = [
     ("9", "Certainty Equivalent & Risk Premium", 2, "Q035, Q036"),
     ("9", "Diversification", 1, "Q054"),
     ("", "Ch. 9 Total", 12, ""),
-    ("", "GRAND TOTAL", 24, "See 'Practice Set' sheet"),
+    ("", "GRAND TOTAL", 24, "See 'Practice Tests' sheet (3 full exams)"),
 ]
 for r, row in enumerate(overview, 2):
     for c, val in enumerate(row, 1):
@@ -436,39 +410,46 @@ for r, row in enumerate(overview, 2):
 set_col_widths(ws0, [14, 32, 12, 50])
 
 # ── Sheet: Study Sets (teacher breakdown) ───────────────────────────────────
-STUDY_SET_ROWS = [
-    (1, 4, "Consumer Problems", 2, "Q1, Q2", [1, 2], "01_Consumer_Problems.pdf"),
-    (2, 4, "Labor-Leisure", 2, "Q3, Q4", [3, 4], "02_Labor_Leisure.pdf"),
-    (3, 4, "Intertemporal Consumption", 2, "Q5, Q6", [5, 6], "03_Intertemporal_Consumption.pdf"),
-    (4, 4, "Elasticity / Types of Goods", 3, "Q7, Q8, Q9", [7, 8, 9], "04_Elasticity_Types_of_Goods.pdf"),
-    (5, 4, "Budget Line", 1, "Q10", [10], "05_Budget_Line.pdf"),
-    (6, 4, "Assumptions / Preferences", 2, "Q11, Q12", [11, 12], "06_Assumptions_Preferences.pdf"),
-    (7, 9, "Insurance Problems", 5, "Q13–Q17", [13, 14, 15, 16, 17], "07_Insurance_Problems.pdf"),
-    (8, 9, "Risk Attitudes", 4, "Q18–Q21", [18, 19, 20, 21], "08_Risk_Attitudes.pdf"),
-    (9, 9, "Certainty Equivalent & Risk Premium", 2, "Q22, Q23", [22, 23], "09_Certainty_Equivalent_Risk_Premium.pdf"),
-    (10, 9, "Diversification", 1, "Q24", [24], "10_Diversification.pdf"),
-]
-ws_sets = wb.create_sheet("Study Sets", 1)
-set_headers = ["Set #", "Chapter", "Category", "Questions in Set", "Practice Q IDs", "PDF File"]
+STUDY_SET_ROWS = []
+qpos = 1
+for i, sec in enumerate(EXAM_STRUCTURE, 1):
+    qids = list(range(qpos, qpos + sec["count"]))
+    STUDY_SET_ROWS.append((i, sec["ch"], sec["category"], sec["count"], f"Q{qpos}–Q{qpos + sec['count'] - 1}" if sec["count"] > 1 else f"Q{qpos}", qids))
+    qpos += sec["count"]
+
+ws_sets = wb.create_sheet("Exam Format", 1)
+set_headers = ["Section #", "Chapter", "Category", "Count", "Question #s on Test"]
 for c, h in enumerate(set_headers, 1):
     ws_sets.cell(row=1, column=c, value=h)
 style_header_row(ws_sets, 1, len(set_headers))
 for i, row in enumerate(STUDY_SET_ROWS, 2):
-    excel_vals = [row[0], row[1], row[2], row[3], row[4], row[6]]
-    for c, val in enumerate(excel_vals, 1):
+    for c, val in enumerate(row[:5], 1):
         cell = ws_sets.cell(row=i, column=c, value=val)
         cell.fill = CH4_FILL if row[1] == 4 else CH9_FILL
         cell.alignment = WRAP
         cell.border = BORDER
-# totals row
 tr = len(STUDY_SET_ROWS) + 2
-ws_sets.cell(row=tr, column=1, value="")
-ws_sets.cell(row=tr, column=2, value="Total")
+ws_sets.cell(row=tr, column=2, value="TOTAL")
 ws_sets.cell(row=tr, column=3, value="Ch.4 = 12 | Ch.9 = 12")
 ws_sets.cell(row=tr, column=4, value=24)
-ws_sets.cell(row=tr, column=5, value="Q1–Q24")
-ws_sets.cell(row=tr, column=6, value="practice_sets/ (10 PDFs + Formula_Sheet.pdf)")
-set_col_widths(ws_sets, [8, 10, 36, 16, 20, 38])
+ws_sets.cell(row=tr, column=5, value="Each practice test PDF has all 24")
+set_col_widths(ws_sets, [10, 10, 36, 8, 28])
+
+# Practice Tests sheet — 3 full simulation exams
+ws_tests = wb.create_sheet("Practice Tests", 2)
+test_headers = ["Test #", "PDF File", "Total Q", "Bank IDs (in exam order)"]
+for c, h in enumerate(test_headers, 1):
+    ws_tests.cell(row=1, column=c, value=h)
+style_header_row(ws_tests, 1, len(test_headers))
+for i, test in enumerate(PRACTICE_TESTS, 2):
+    row = [test["num"], f"{test['name']}.pdf", 24, ", ".join(test["ids"])]
+    for c, val in enumerate(row, 1):
+        cell = ws_tests.cell(row=i, column=c, value=val)
+        cell.fill = PRACTICE_FILL
+        cell.alignment = WRAP
+        cell.border = BORDER
+set_col_widths(ws_tests, [8, 24, 10, 80])
+ws_tests.freeze_panes = "A2"
 ws_sets.freeze_panes = "A2"
 
 # ── Sheet 2: Full Question Bank ─────────────────────────────────────────────
@@ -498,7 +479,7 @@ for c, h in enumerate(practice_headers, 1):
 style_header_row(ws2, 1, len(practice_headers))
 
 SET_FOR_Q = {}
-for set_num, ch, cat, cnt, _, qids, _pdf in STUDY_SET_ROWS:
+for set_num, ch, cat, cnt, _, qids in STUDY_SET_ROWS:
     for j, qn in enumerate(qids, 1):
         SET_FOR_Q[qn] = (set_num, j, cnt, cat)
 
@@ -643,3 +624,4 @@ wb.save(out)
 print(f"Saved: {out}")
 print(f"Total questions in bank: {len(QUESTIONS)}")
 print(f"Practice set: {len(PRACTICE_IDS)} questions")
+print(f"Practice tests: {len(PRACTICE_TESTS)} simulation exams (24 Q each)")
