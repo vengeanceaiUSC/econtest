@@ -5,4 +5,12 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   base: '/econtest/',
+  server: {
+    host: true,
+    allowedHosts: true,
+  },
+  preview: {
+    host: true,
+    allowedHosts: true,
+  },
 })
