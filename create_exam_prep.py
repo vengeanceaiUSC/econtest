@@ -435,6 +435,40 @@ for r, row in enumerate(overview, 2):
         cell.alignment = WRAP
 set_col_widths(ws0, [14, 32, 12, 50])
 
+# ── Sheet: Study Sets (teacher breakdown) ───────────────────────────────────
+STUDY_SET_ROWS = [
+    (1, 4, "Consumer Problems", 2, "Q1, Q2", [1, 2]),
+    (2, 4, "Labor-Leisure", 2, "Q3, Q4", [3, 4]),
+    (3, 4, "Intertemporal Consumption", 2, "Q5, Q6", [5, 6]),
+    (4, 4, "Elasticity / Types of Goods", 3, "Q7, Q8, Q9", [7, 8, 9]),
+    (5, 4, "Budget Line", 1, "Q10", [10]),
+    (6, 4, "Assumptions / Preferences", 2, "Q11, Q12", [11, 12]),
+    (7, 9, "Insurance Problems", 5, "Q13–Q17", [13, 14, 15, 16, 17]),
+    (8, 9, "Risk Attitudes", 4, "Q18–Q21", [18, 19, 20, 21]),
+    (9, 9, "Certainty Equivalent & Risk Premium", 2, "Q22, Q23", [22, 23]),
+    (10, 9, "Diversification", 1, "Q24", [24]),
+]
+ws_sets = wb.create_sheet("Study Sets", 1)
+set_headers = ["Set #", "Chapter", "Category", "Questions in Set", "Practice Q IDs"]
+for c, h in enumerate(set_headers, 1):
+    ws_sets.cell(row=1, column=c, value=h)
+style_header_row(ws_sets, 1, len(set_headers))
+for i, row in enumerate(STUDY_SET_ROWS, 2):
+    for c, val in enumerate(row[:5], 1):
+        cell = ws_sets.cell(row=i, column=c, value=val)
+        cell.fill = CH4_FILL if row[1] == 4 else CH9_FILL
+        cell.alignment = WRAP
+        cell.border = BORDER
+# totals row
+tr = len(STUDY_SET_ROWS) + 2
+ws_sets.cell(row=tr, column=1, value="")
+ws_sets.cell(row=tr, column=2, value="Total")
+ws_sets.cell(row=tr, column=3, value="Ch.4 = 12 | Ch.9 = 12")
+ws_sets.cell(row=tr, column=4, value=24)
+ws_sets.cell(row=tr, column=5, value="Q1–Q24")
+set_col_widths(ws_sets, [8, 10, 36, 16, 20])
+ws_sets.freeze_panes = "A2"
+
 # ── Sheet 2: Full Question Bank ─────────────────────────────────────────────
 ws1 = wb.create_sheet("Question Bank")
 for c, h in enumerate(BANK_HEADERS, 1):
@@ -456,15 +490,24 @@ ws1.freeze_panes = "A2"
 
 # ── Sheet 3: Practice Set (24 questions) ────────────────────────────────────
 ws2 = wb.create_sheet("Practice Set")
-practice_headers = ["#", "Label", "Chapter", "Category"] + BANK_HEADERS[4:]
+practice_headers = ["#", "Study Set", "In-Set #", "Label", "Chapter", "Category"] + BANK_HEADERS[4:]
 for c, h in enumerate(practice_headers, 1):
     ws2.cell(row=1, column=c, value=h)
 style_header_row(ws2, 1, len(practice_headers))
 
+SET_FOR_Q = {}
+for set_num, ch, cat, cnt, _, qids in STUDY_SET_ROWS:
+    for j, qn in enumerate(qids, 1):
+        SET_FOR_Q[qn] = (set_num, j, cnt, cat)
+
 for i, qid in enumerate(PRACTICE_IDS, 1):
     q = q_by_id[qid]
+    qnum = i
+    set_info = SET_FOR_Q.get(qnum, ("", "", "", ""))
     row = [
-        i,
+        qnum,
+        f"Set {set_info[0]}: {set_info[3]}" if set_info[0] else "",
+        f"{set_info[1]} of {set_info[2]}" if set_info[0] else "",
         PRACTICE_LABELS.get(qid, ""),
         q[1],
         q[2],
@@ -482,7 +525,7 @@ for i, qid in enumerate(PRACTICE_IDS, 1):
         cell.fill = fill
         cell.alignment = WRAP
         cell.border = BORDER
-set_col_widths(ws2, [5, 22, 8, 28, 22, 10, 55, 12, 40, 25])
+set_col_widths(ws2, [5, 28, 10, 22, 8, 28, 22, 10, 55, 12, 40, 25])
 ws2.freeze_panes = "A2"
 
 # ── Sheet 4: Answer Key (Practice Set) ────────────────────────────────────────
