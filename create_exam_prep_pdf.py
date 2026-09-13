@@ -94,6 +94,29 @@ def hw_crop(pdf_key, page, start, end, tag):
     return [render_crop(pdf_key, page, y0, y1, tag)]
 
 
+def pdf_crop(pdf_key, page, start, end, tag):
+    """Crop a labeled question region; include setup pages when a question says 'from previous'."""
+    return hw_crop(pdf_key, page, start, end, tag)
+
+
+def tom_insurance_setup(tag="tom_setup"):
+    """Sample Ch.9 Q15 — Tom's house/insurance setup (needed for Q16–Q17)."""
+    return pdf_crop("S9", 5, "Question 15", "Question 16", tag)
+
+
+def merge_images(*parts):
+    """Combine multiple crop callables into one images_for entry."""
+    def fn():
+        out = []
+        for part in parts:
+            if callable(part):
+                out.extend(part())
+            else:
+                out.extend(part)
+        return out
+    return fn
+
+
 def bank_images_map():
     return {
         "Q001": [("text", ["Jackie: 'Knives Out' vs 'Top Gun Maverick.' She doesn't care which. Violation?", "HW1 Ex 2.1"])],
@@ -116,8 +139,11 @@ def bank_images_map():
         "Q023": [("text", ["Contract 1: $10M today + $90M future. Contract 2: $42M + $54M. r=0.20. Cheaper PV?", "HW1 Ex 5.1"])],
         "Q024": lambda: hw_crop("HW1", 2, "Exercise 5", None, "Q024"),
         "Q025": [render_page("S4", 11, "Q025"), render_page("S4", 12, "Q025b")],
-        "Q026": [render_page("MOCK", 5, "Q026")],
-        "Q027": [render_page("MOCK", 5, "Q027")],
+        "Q026": lambda: pdf_crop("MOCK", 5, "Question 24", "Question 25", "Q026"),
+        "Q027": lambda: merge_images(
+            lambda: pdf_crop("MOCK", 5, "Question 24", "Question 25", "Q027_setup"),
+            lambda: pdf_crop("MOCK", 5, "Question 25", None, "Q027"),
+        )(),
         "Q028": lambda: hw_crop("HW1", 2, "Exercise 4", "Exercise 5", "Q028"),
         "Q029": [render_page("S4", 10, "Q029")],
         "Q030": [render_page("S4", 10, "Q030")],
@@ -126,8 +152,11 @@ def bank_images_map():
         "Q033": [render_page("S4", 11, "Q033")],
         "Q034": [render_page("MOCK", 3, "Q034")],
         "Q035": lambda: hw_crop("HW2", 1, "Exercise 1", "Exercise 2", "Q035"),
-        "Q036": [render_page("S9", 5, "Q036")],
-        "Q037": [render_page("S9", 5, "Q037")],
+        "Q036": lambda: pdf_crop("S9", 5, "Question 12", "Question 13", "Q036"),
+        "Q037": lambda: merge_images(
+            lambda: pdf_crop("S9", 5, "Question 13", "Question 14", "Q037_setup"),
+            lambda: pdf_crop("S9", 5, "Question 14", "Question 15", "Q037"),
+        )(),
         "Q038": [render_page("MOCK", 8, "Q038")],
         "Q039": lambda: hw_crop("HW2", 1, "Exercise 2", None, "Q039"),
         "Q040": [render_page("S9", 2, "Q040")],
@@ -137,13 +166,19 @@ def bank_images_map():
         "Q044": [render_page("S9", 3, "Q044")],
         "Q045": [render_page("MOCK", 11, "Q045")],
         "Q046": [render_page("MOCK", 11, "Q046")],
-        "Q047": [render_page("HW2", 2, "Q047")],
-        "Q048": [render_page("HW2", 2, "Q048")],
-        "Q049": [("text", ["Tom insurance: risk premium = max premium - fair premium.", "HW2 Ex 3c"])],
-        "Q050": [render_page("S9", 6, "Q050")],
-        "Q051": [render_page("S9", 6, "Q051")],
-        "Q052": [render_page("MOCK", 10, "Q052")],
-        "Q053": [render_page("MOCK", 9, "Q053")],
+        "Q047": lambda: hw_crop("HW2", 2, "Exercise 3", None, "Q047"),
+        "Q048": lambda: merge_images(
+            tom_insurance_setup("Q048_setup"),
+            lambda: pdf_crop("S9", 6, "Question 16", "Question 17", "Q048"),
+        )(),
+        "Q049": lambda: merge_images(
+            tom_insurance_setup("Q049_setup"),
+            lambda: pdf_crop("S9", 6, "Question 17", "Question 18", "Q049"),
+        )(),
+        "Q050": lambda: pdf_crop("S9", 6, "Question 18", "Question 19", "Q050"),
+        "Q051": lambda: pdf_crop("S9", 6, "Question 20", None, "Q051"),
+        "Q052": lambda: pdf_crop("MOCK", 10, "Question 27", None, "Q052"),
+        "Q053": lambda: pdf_crop("MOCK", 9, "Question 25", "Question 26", "Q053"),
         "Q054": [render_page("S9", 7, "Q054"), render_page("S9", 8, "Q054b")],
         "Q055": [render_page("MOCK", 11, "Q055")],
     }
