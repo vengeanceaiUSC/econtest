@@ -8,17 +8,19 @@ from exam_config import EXAM_STRUCTURE
 
 OUT = "/workspace/Study_Tracker.xlsx"
 
-# Categories left unchecked (not green)
+PDF_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Labor_Leisure_Problems.pdf"
+LL_XLSX_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Labor_Leisure_Problems.xlsx"
+
 SKIP_GREEN = {"Labor-Leisure", "Diversification"}
 
 HEADER_FILL = PatternFill("solid", fgColor="1F4E79")
 CH4_FILL = PatternFill("solid", fgColor="D6E4F0")
 CH9_FILL = PatternFill("solid", fgColor="E2EFDA")
-GREEN_FILL = PatternFill("solid", fgColor="C6EFCE")  # Excel green
-WHITE_FILL = PatternFill("solid", fgColor="FFFFFF")
+GREEN_FILL = PatternFill("solid", fgColor="C6EFCE")
 HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
 BOLD = Font(bold=True)
 CHECK_FONT = Font(bold=True, size=14, color="006100")
+LINK_FONT = Font(color="0563C1", underline="single", size=10)
 WRAP = Alignment(wrap_text=True, vertical="center")
 CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
 thin = Side(style="thin", color="AAAAAA")
@@ -30,9 +32,9 @@ ws.title = "Topic Checklist"
 
 ws["A1"] = "ECON 351 — Exam Topic Tracker"
 ws["A1"].font = Font(bold=True, size=14)
-ws.merge_cells("A1:E1")
+ws.merge_cells("A1:F1")
 
-headers = ["Chapter", "Category", "Questions on Test", "Status", "Notes"]
+headers = ["Chapter", "Category", "Questions on Test", "Status", "Notes", "Practice Materials"]
 for c, h in enumerate(headers, 1):
     cell = ws.cell(row=3, column=c, value=h)
     cell.font = HEADER_FONT
@@ -54,11 +56,15 @@ for section in EXAM_STRUCTURE:
     done = cat not in SKIP_GREEN
     status = "✓ Done" if done else "— Not yet"
     notes = "" if done else "Still need to practice"
+    materials = ""
+    if cat == "Labor-Leisure":
+        notes = "See Practice PDF + Excel →"
+        materials = "Labor_Leisure_Problems.pdf"
 
     base_fill = CH4_FILL if ch == 4 else CH9_FILL
     row_fill = GREEN_FILL if done else base_fill
 
-    values = [f"Ch. {ch}", cat, count, status, notes]
+    values = [f"Ch. {ch}", cat, count, status, notes, materials]
     for c, val in enumerate(values, 1):
         cell = ws.cell(row=row, column=c, value=val)
         cell.fill = row_fill
@@ -67,47 +73,55 @@ for section in EXAM_STRUCTURE:
         if c == 4 and done:
             cell.font = CHECK_FONT
 
+    if cat == "Labor-Leisure":
+        pdf_cell = ws.cell(row=row, column=6)
+        pdf_cell.hyperlink = PDF_URL
+        pdf_cell.value = "Open Labor-Leisure PDF"
+        pdf_cell.font = LINK_FONT
+        pdf_cell.fill = row_fill
+        pdf_cell.border = BORDER
+        # Also add Excel link in notes
+        note_cell = ws.cell(row=row, column=5)
+        note_cell.hyperlink = LL_XLSX_URL
+        note_cell.value = "Open PDF + Excel workbook"
+        note_cell.font = LINK_FONT
+
     row += 1
 
 # Totals
-ws.cell(row=row, column=1, value="").border = BORDER
 ws.cell(row=row, column=2, value="Ch. 4 Total").font = BOLD
 ws.cell(row=row, column=3, value=ch4_total).font = BOLD
-ws.cell(row=row, column=4, value="12").font = BOLD
-for c in range(1, 6):
+for c in range(1, 7):
     ws.cell(row=row, column=c).border = BORDER
     ws.cell(row=row, column=c).fill = CH4_FILL
 row += 1
 
 ws.cell(row=row, column=2, value="Ch. 9 Total").font = BOLD
 ws.cell(row=row, column=3, value=ch9_total).font = BOLD
-ws.cell(row=row, column=4, value="12").font = BOLD
-for c in range(1, 6):
+for c in range(1, 7):
     ws.cell(row=row, column=c).border = BORDER
     ws.cell(row=row, column=c).fill = CH9_FILL
 row += 1
 
 ws.cell(row=row, column=2, value="GRAND TOTAL").font = BOLD
 ws.cell(row=row, column=3, value=24).font = BOLD
-for c in range(1, 6):
+for c in range(1, 7):
     ws.cell(row=row, column=c).border = BORDER
     ws.cell(row=row, column=c).fill = PatternFill("solid", fgColor="FFF2CC")
 
-# Legend
 row += 2
 ws.cell(row=row, column=1, value="Legend:").font = BOLD
 row += 1
-ws.cell(row=row, column=1, value="Green = reviewed / done")
-ws.cell(row=row, column=1).fill = GREEN_FILL
+ws.cell(row=row, column=1, value="Green = reviewed / done").fill = GREEN_FILL
 row += 1
-ws.cell(row=row, column=1, value="Not green = still need practice (Labor-Leisure, Diversification)")
-ws.cell(row=row, column=1).fill = CH4_FILL
+ws.cell(row=row, column=1, value="Not green = still need practice").fill = CH4_FILL
 
 ws.column_dimensions["A"].width = 10
-ws.column_dimensions["B"].width = 36
-ws.column_dimensions["C"].width = 18
-ws.column_dimensions["D"].width = 14
+ws.column_dimensions["B"].width = 32
+ws.column_dimensions["C"].width = 16
+ws.column_dimensions["D"].width = 12
 ws.column_dimensions["E"].width = 28
+ws.column_dimensions["F"].width = 28
 ws.freeze_panes = "A4"
 
 wb.save(OUT)
