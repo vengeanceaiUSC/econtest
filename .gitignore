@@ -1,5 +1,6 @@
 __pycache__/
 exam_prep_images/
+.pdf_page_cache/
 *.pyc
 app/node_modules/
 app/dist/
