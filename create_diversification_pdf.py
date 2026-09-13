@@ -6,14 +6,13 @@ import textwrap
 import pymupdf
 
 from create_exam_prep_pdf import (
-    PDFS,
     PW,
     PH,
     COLOR,
     MUTED,
     place_image,
-    pdf_crop,
-    render_page,
+    mock_q29_shots,
+    sample_q22_shots,
 )
 
 UPLOADS = "/home/ubuntu/.cursor/projects/workspace/uploads"
@@ -53,17 +52,13 @@ PROBLEMS = [
     {
         "id": "D-1",
         "source": "Sample Questions Ch.9 - Question 22 | Practice Tests 1 & 3 Q24",
-        "shots": lambda: [
-            pdf_crop("S9", 7, "Question 22", "Question 23", "D1_q22"),
-        ],
+        "shots": lambda: sample_q22_shots("D1_q22"),
         "note": "Feng: agriculture (A & B). Nan: airline/oil (C & D).",
     },
     {
         "id": "D-2",
         "source": "Mock Midterm 1 - Question 29 | Practice Test 2 Q24",
-        "shots": lambda: [
-            pdf_crop("MOCK", 11, "Question 29", "Question 30", "D2_q29"),
-        ],
+        "shots": lambda: mock_q29_shots("D2_q29"),
         "note": "John: half A + half B (positively correlated). Marc: half C + half D (negatively correlated).",
     },
     {

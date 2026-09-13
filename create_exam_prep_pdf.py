@@ -65,16 +65,48 @@ def render_page(pdf_key, page_1based, tag=""):
 def render_crop(pdf_key, page_1based, y0, y1, tag=""):
     doc = pymupdf.open(PDFS[pdf_key])
     page = doc[page_1based - 1]
+    return render_region_crop(pdf_key, page_1based, 0, page.rect.width, y0, y1, tag)
+
+
+def render_region_crop(pdf_key, page_1based, x0, x1, y0, y1, tag=""):
+    """Crop a rectangular region (supports two-column exam layouts)."""
+    doc = pymupdf.open(PDFS[pdf_key])
+    page = doc[page_1based - 1]
     if y1 is None:
         y1 = page.rect.height
     y0, y1 = max(0, y0 - 6), min(page.rect.height, y1)
-    if y1 - y0 < 20:
+    x0, x1 = max(0, x0), min(page.rect.width, x1)
+    if y1 - y0 < 20 or x1 - x0 < 20:
         return render_page(pdf_key, page_1based, tag)
     mat = pymupdf.Matrix(DPI / 72, DPI / 72)
-    pix = page.get_pixmap(matrix=mat, clip=pymupdf.Rect(0, y0, page.rect.width, y1), alpha=False)
+    pix = page.get_pixmap(matrix=mat, clip=pymupdf.Rect(x0, y0, x1, y1), alpha=False)
     path = os.path.join(OUT_DIR, f"{tag}_crop.jpg")
     pix.save(path, jpg_quality=JPEG_QUALITY)
     return path
+
+
+def two_column_question(pdf_key, page, left_y0, end_label_right, tag, right_y0=70):
+    """Crop a question that starts at the bottom-left and continues top-right (two-column PDF)."""
+    doc = pymupdf.open(PDFS[pdf_key])
+    pg = doc[page - 1]
+    mid = pg.rect.width / 2
+    right_y1 = pg.rect.height
+    if end_label_right:
+        hits = [h for h in pg.search_for(end_label_right) if h.x0 >= mid - 10]
+        if hits:
+            right_y1 = min(h.y0 for h in hits)
+    return [
+        render_region_crop(pdf_key, page, 0, mid, left_y0, None, f"{tag}_L"),
+        render_region_crop(pdf_key, page, mid, pg.rect.width, right_y0, right_y1, f"{tag}_R"),
+    ]
+
+
+def sample_q22_shots(tag="Q054"):
+    return two_column_question("S9", 7, left_y0=620, end_label_right="Question 23", tag=tag)
+
+
+def mock_q29_shots(tag="Q055"):
+    return two_column_question("MOCK", 11, left_y0=592, end_label_right="Question 30", tag=tag)
 
 
 def y_of(pdf_key, page, label):
@@ -179,8 +211,8 @@ def bank_images_map():
         "Q051": lambda: pdf_crop("S9", 6, "Question 20", None, "Q051"),
         "Q052": lambda: pdf_crop("MOCK", 10, "Question 27", None, "Q052"),
         "Q053": lambda: pdf_crop("MOCK", 9, "Question 25", "Question 26", "Q053"),
-        "Q054": [render_page("S9", 7, "Q054"), render_page("S9", 8, "Q054b")],
-        "Q055": [render_page("MOCK", 11, "Q055")],
+        "Q054": lambda: sample_q22_shots("Q054"),
+        "Q055": lambda: mock_q29_shots("Q055"),
     }
 
 
