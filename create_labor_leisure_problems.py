@@ -25,13 +25,13 @@ PRACTICE_PROBLEMS = [
         "source": "All 3 practice tests — Q3",
         "bank_id": "Q021",
         "problem": (
-            "Maria has 16 hours/day for leisure (ℓ) and work. "
+            "Maria has 16 hours/day for leisure (l) and work. "
             "Wage w = $20/hr, non-labor income V = $80. "
-            "Utility U(c, ℓ) = c^0.5 ℓ^0.5 where c = w(16 − ℓ) + V.\n\n"
-            "Find: (a) optimal leisure ℓ*, (b) labor hours L*, (c) consumption c*."
+            "Utility U(c, l) = c^0.5 * l^0.5 where c = w*(16 - l) + V.\n\n"
+            "Find: (a) optimal leisure l*, (b) labor hours L*, (c) consumption c*."
         ),
-        "hints": "Budget: c = w(16−ℓ)+V. Optimum: MU_ℓ/MU_c = w. Cobb-Douglas α=β=0.5 → c = wℓ.",
-        "answer": "ℓ* = 10 hrs, L* = 6 hrs, c* = $200",
+        "hints": "Budget: c = w*(16-l)+V. Optimum: MU_l/MU_c = w. Cobb-Douglas a=b=0.5 -> c = w*l.",
+        "answer": "l* = 10 hrs, L* = 6 hrs, c* = $200",
     },
     {
         "id": "LL-2 (Practice Test Q4)",
@@ -39,11 +39,11 @@ PRACTICE_PROBLEMS = [
         "bank_id": "Q022",
         "problem": (
             "Same setup as LL-1, but wage rises to w = $30/hr.\n\n"
-            "Find: (a) new ℓ*, (b) new L*, (c) new c*. "
+            "Find: (a) new l*, (b) new L*, (c) new c*. "
             "Does Maria work more or less than when w = $20?"
         ),
-        "hints": "Use ℓ* = (w·T + V) / (2w) with T = 16. Compare L* to LL-1.",
-        "answer": "ℓ* ≈ 9.33 hrs, L* ≈ 6.67 hrs, c* ≈ $360. Works MORE.",
+        "hints": "Use l* = (w*T + V) / (2w) with T = 16. Compare L* to LL-1.",
+        "answer": "l* = 9.33 hrs, L* = 6.67 hrs, c* = $360. Works MORE.",
     },
 ]
 
@@ -55,11 +55,11 @@ EXTRA_PROBLEMS = [
         "bank_id": "—",
         "problem": (
             "Alex has 8 hours/day (T = 8). Wage w = $25/hr, V = $0. "
-            "U(c, ℓ) = c^0.5 ℓ^0.5, c = w(8 − ℓ) + V.\n\n"
-            "Find ℓ*, L*, and c*."
+            "U(c, l) = c^0.5 * l^0.5, c = w*(8 - l) + V.\n\n"
+            "Find l*, L*, and c*."
         ),
-        "hints": "ℓ* = (wT + V)/(2w) when α = β = 0.5.",
-        "answer": "ℓ* = 4 hrs, L* = 4 hrs, c* = $100",
+        "hints": "l* = (w*T + V)/(2w) when a = b = 0.5.",
+        "answer": "l* = 4 hrs, L* = 4 hrs, c* = $100",
     },
     {
         "id": "LL-4",
@@ -67,35 +67,35 @@ EXTRA_PROBLEMS = [
         "bank_id": "—",
         "problem": (
             "Same as LL-3 but V = $40 (lottery winnings). w = $25, T = 8.\n\n"
-            "Find ℓ*, L*, c*. Did leisure increase vs LL-3?"
+            "Find l*, L*, c*. Did leisure increase vs LL-3?"
         ),
-        "hints": "Higher V shifts budget outward → more leisure for Cobb-Douglas.",
-        "answer": "ℓ* = 4.8 hrs, L* = 3.2 hrs, c* = $120. Yes — more leisure.",
+        "hints": "Higher V shifts budget outward -> more leisure for Cobb-Douglas.",
+        "answer": "l* = 4.8 hrs, L* = 3.2 hrs, c* = $120. Yes - more leisure.",
     },
     {
         "id": "LL-5",
         "source": "Extra practice (study sheet)",
         "bank_id": "—",
         "problem": (
-            "Jordan: T = 24 hrs, w = $15/hr, V = $60, U(c, ℓ) = c^0.25 ℓ^0.75 "
+            "Jordan: T = 24 hrs, w = $15/hr, V = $60, U(c, l) = c^0.25 * l^0.75 "
             "(loves leisure more than Maria).\n\n"
-            "Find ℓ* using MU_ℓ/MU_c = w."
+            "Find l* using MU_l/MU_c = w."
         ),
-        "hints": "MRS = (0.75/0.25)(c/ℓ) = 3c/ℓ = w → c = (w/3)ℓ. Plug into budget.",
-        "answer": "ℓ* ≈ 15.5 hrs, L* ≈ 8.5 hrs, c* ≈ $187.50",
+        "hints": "MRS = (0.75/0.25)*(c/l) = 3c/l = w -> c = (w/3)*l. Plug into budget.",
+        "answer": "l* = 15.5 hrs, L* = 8.5 hrs, c* = $187.50",
     },
     {
         "id": "LL-6",
         "source": "Extra practice (study sheet)",
         "bank_id": "—",
         "problem": (
-            "Sam: T = 10 hrs, V = $100, U(c, ℓ) = c^0.5 ℓ^0.5.\n"
-            "(a) w = $10: find ℓ*, L*\n"
-            "(b) w = $40: find ℓ*, L*\n"
+            "Sam: T = 10 hrs, V = $100, U(c, l) = c^0.5 * l^0.5.\n"
+            "(a) w = $10: find l*, L*\n"
+            "(b) w = $40: find l*, L*\n"
             "(c) As wage rises, work more or less?"
         ),
-        "hints": "ℓ* = (wT+V)/(2w). Compare L* = T − ℓ*.",
-        "answer": "(a) ℓ*=6, L*=4  (b) ℓ*=7.5, L*=2.5  (c) Works LESS",
+        "hints": "l* = (w*T+V)/(2w). Compare L* = T - l*.",
+        "answer": "(a) l*=6, L*=4  (b) l*=7.5, L*=2.5  (c) Works LESS",
     },
 ]
 
@@ -178,12 +178,12 @@ ws2.column_dimensions["C"].width = 60
 # Sheet 3: Formulas
 ws3 = wb.create_sheet("Formula Sheet")
 formulas = [
-    ("Setup", "T = total hours, ℓ = leisure, L = labor hours, L = T − ℓ"),
-    ("Budget", "c = w·L + V = w(T − ℓ) + V"),
-    ("Optimum", "MU_ℓ / MU_c = w  (MRS = wage)"),
-    ("Cobb-Douglas U = c^α ℓ^β", "At optimum: β·c = α·w·ℓ"),
-    ("Cobb-Douglas α = β = 0.5", "c = w·ℓ  and  ℓ* = (w·T + V) / (2w)"),
-    ("Consumption", "c* = w·ℓ* + V  (or w·L* + V)"),
+    ("Setup", "T = total hours, l = leisure, L = labor hours, L = T - l"),
+    ("Budget", "c = w*L + V = w*(T - l) + V"),
+    ("Optimum", "MU_l / MU_c = w  (MRS = wage)"),
+    ("Cobb-Douglas U = c^a * l^b", "At optimum: b*c = a*w*l"),
+    ("Cobb-Douglas a = b = 0.5", "c = w*l  and  l* = (w*T + V) / (2w)"),
+    ("Consumption", "c* = w*l* + V  (or w*L* + V)"),
 ]
 ws3["A1"] = "Labor-Leisure Formula Sheet"
 ws3["A1"].font = Font(bold=True, size=14)
