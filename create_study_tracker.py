@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Create Study_Tracker.xlsx — exam topic checklist with green checkoffs."""
 
+import os
+import subprocess
+
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
-from openpyxl.utils import get_column_letter
 from exam_config import EXAM_STRUCTURE
+from excel_pdf_embed import add_pdf_pages_sheet, package_pdf_in_xlsx
 
 OUT = "/workspace/Study_Tracker.xlsx"
+PDF_PATH = "/workspace/Labor_Leisure_Problems.pdf"
 
 PDF_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Labor_Leisure_Problems.pdf"
 LL_XLSX_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Labor_Leisure_Problems.xlsx"
@@ -58,8 +62,8 @@ for section in EXAM_STRUCTURE:
     notes = "" if done else "Still need to practice"
     materials = ""
     if cat == "Labor-Leisure":
-        notes = "See Practice PDF + Excel →"
-        materials = "Labor_Leisure_Problems.pdf"
+        notes = "PDF included in this file (Labor-Leisure PDF tab)"
+        materials = "Labor_Leisure_Problems.pdf (embedded)"
 
     base_fill = CH4_FILL if ch == 4 else CH9_FILL
     row_fill = GREEN_FILL if done else base_fill
@@ -75,15 +79,14 @@ for section in EXAM_STRUCTURE:
 
     if cat == "Labor-Leisure":
         pdf_cell = ws.cell(row=row, column=6)
-        pdf_cell.hyperlink = PDF_URL
-        pdf_cell.value = "Open Labor-Leisure PDF"
+        pdf_cell.hyperlink = "#'Labor-Leisure PDF'!A1"
+        pdf_cell.value = "Go to embedded PDF tab"
         pdf_cell.font = LINK_FONT
         pdf_cell.fill = row_fill
         pdf_cell.border = BORDER
-        # Also add Excel link in notes
         note_cell = ws.cell(row=row, column=5)
         note_cell.hyperlink = LL_XLSX_URL
-        note_cell.value = "Open PDF + Excel workbook"
+        note_cell.value = "Also: full LL workbook (online)"
         note_cell.font = LINK_FONT
 
     row += 1
@@ -124,5 +127,10 @@ ws.column_dimensions["E"].width = 28
 ws.column_dimensions["F"].width = 28
 ws.freeze_panes = "A4"
 
+if not os.path.exists(PDF_PATH):
+    subprocess.run(["python3", "/workspace/create_labor_leisure_pdf.py"], check=True)
+
+add_pdf_pages_sheet(wb, PDF_PATH, sheet_name="Labor-Leisure PDF")
 wb.save(OUT)
-print(f"Saved: {OUT}")
+package_pdf_in_xlsx(OUT, PDF_PATH)
+print(f"Saved: {OUT} (with embedded Labor-Leisure PDF)")

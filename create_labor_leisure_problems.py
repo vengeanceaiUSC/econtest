@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """Extract labor-leisure problems from practice tests + add extra problems to solve."""
 
+import os
+import subprocess
+
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
+from excel_pdf_embed import add_pdf_pages_sheet, package_pdf_in_xlsx
+
 OUT = "/workspace/Labor_Leisure_Problems.xlsx"
+PDF_PATH = "/workspace/Labor_Leisure_Problems.pdf"
 PDF_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Labor_Leisure_Problems.pdf"
 LINK_FONT = Font(color="0563C1", underline="single")
 
@@ -116,9 +122,9 @@ ws.merge_cells("A1:F1")
 ws["A2"] = LECTURE_NOTE
 ws["A2"].font = Font(italic=True, color="666666", size=10)
 ws.merge_cells("A2:F2")
-pdf_link = ws.cell(row=3, column=1, value="Full PDF version (all problems + answer key):")
+pdf_link = ws.cell(row=3, column=1, value="Full PDF (included in this workbook — see 'PDF' tab):")
 pdf_link.font = BOLD
-link = ws.cell(row=3, column=3, value="Labor_Leisure_Problems.pdf")
+link = ws.cell(row=3, column=3, value="Open online copy")
 link.hyperlink = PDF_URL
 link.font = LINK_FONT
 ws.merge_cells("A3:B3")
@@ -193,5 +199,10 @@ for i, (topic, formula) in enumerate(formulas, 3):
 ws3.column_dimensions["A"].width = 28
 ws3.column_dimensions["B"].width = 50
 
+if not os.path.exists(PDF_PATH):
+    subprocess.run(["python3", "/workspace/create_labor_leisure_pdf.py"], check=True)
+
+add_pdf_pages_sheet(wb, PDF_PATH, sheet_name="PDF", first=True)
 wb.save(OUT)
-print(f"Saved: {OUT} ({len(all_probs)} problems)")
+package_pdf_in_xlsx(OUT, PDF_PATH)
+print(f"Saved: {OUT} ({len(all_probs)} problems + embedded PDF)")
