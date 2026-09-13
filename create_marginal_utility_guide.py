@@ -24,13 +24,13 @@ BORDER = Border(left=thin, right=thin, top=thin, bottom=thin)
 
 SECTIONS = [
     ("Total Utility (TU)", "Overall satisfaction from a given amount of wealth or goods."),
-    ("Marginal Utility (MU)", "Extra satisfaction from exactly one more unit. MU = change in TU."),
-    ("First derivative", "MU = u'(I). Answers: how much does the next unit add?"),
-    ("Second derivative", "Rate of change of MU. Is MU rising, falling, or flat?"),
-    ("MU increasing", "Example: MU at unit 1 = 10, MU at unit 2 = 20 -> MU rising -> u'' > 0 -> risk-loving"),
-    ("MU decreasing", "Each extra unit adds less -> u'' < 0 -> risk-averse (most common on exam)"),
-    ("MU constant", "Each extra unit adds the same -> u'' = 0 -> risk-neutral"),
-    ("Exam shortcut", "u'' < 0: risk averse | u'' = 0: risk neutral | u'' > 0: risk loving"),
+    ("Marginal Utility (MU)", "Extra satisfaction from exactly one more unit. MU = u'(x)."),
+    ("Second derivative", "Measures whether MU is increasing, decreasing, or flat."),
+    ("MU increasing example", "MU at 1 = 10, MU at 2 = 20 -> MU rising -> u'' > 0 -> risk-loving"),
+    ("NEGATIVE u''", "Concave utility. MU going down. Second derivative negative because MU is decreasing. Risk averse."),
+    ("POSITIVE u''", "Convex utility. MU going up, faster every unit. Risk loving."),
+    ("NEUTRAL u'' = 0", "Linear utility. Flat MU line. Second derivative is 0. Risk neutral."),
+    ("Graphs in PDF", "sqrt(x) concave + decreasing MU | x linear + flat MU | x^2 convex + increasing MU"),
 ]
 
 wb = Workbook()

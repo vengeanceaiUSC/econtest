@@ -2,6 +2,7 @@ __pycache__/
 exam_prep_images/
 .pdf_page_cache/
 diversification_images/
+mu_graphs/
 *.pyc
 app/node_modules/
 app/dist/
