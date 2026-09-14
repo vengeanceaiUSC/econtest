@@ -31,6 +31,7 @@ HEADER_FILL = PatternFill("solid", fgColor="1F4E79")
 CH4_FILL = PatternFill("solid", fgColor="D6E4F0")
 CH9_FILL = PatternFill("solid", fgColor="E2EFDA")
 GREEN_FILL = PatternFill("solid", fgColor="C6EFCE")
+HIGHLIGHT_FILL = PatternFill("solid", fgColor="FFF2CC")
 HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
 BOLD = Font(bold=True)
 CHECK_FONT = Font(bold=True, size=14, color="006100")
@@ -62,23 +63,58 @@ def add_material_links(ws, row, row_fill, sheet_name, pdf_url, pdf_label):
     ws.cell(row=row, column=5).border = BORDER
 
 
+PDF_LINKS = [
+    ("Assumptions & Preferences", PREF_PDF_URL, PREF_XLSX_URL, "Preferences PDF"),
+    ("Labor-Leisure", PDF_URL, LL_XLSX_URL, "Labor-Leisure PDF"),
+    ("Diversification & Variance", DIV_PDF_URL, DIV_XLSX_URL, "Diversification PDF"),
+    ("Marginal Utility Guide", MU_PDF_URL, MU_XLSX_URL, "Marginal Utility PDF"),
+]
+
 wb = Workbook()
-ws = wb.active
-ws.title = "Topic Checklist"
+links = wb.active
+links.title = "PDF LINKS"
+links["A1"] = "CLICK THESE LINKS TO OPEN PDFs"
+links["A1"].font = Font(bold=True, size=16, color="1F4E79")
+links.merge_cells("A1:D1")
+links["A2"] = "If a link does not open, copy the URL from column C into your browser."
+links["A2"].font = Font(italic=True, size=10, color="666666")
+links.merge_cells("A2:D2")
+for c, h in enumerate(["Topic", "Open PDF (click)", "Copy URL if link fails", "Workbook tab"], 1):
+    cell = links.cell(row=4, column=c, value=h)
+    cell.font = HEADER_FONT
+    cell.fill = HEADER_FILL
+    cell.border = BORDER
+for i, (topic, pdf_url, xlsx_url, tab) in enumerate(PDF_LINKS, 5):
+    links.cell(row=i, column=1, value=topic).font = BOLD
+    set_external_link(links.cell(row=i, column=2), pdf_url, f"OPEN {topic} PDF")
+    links.cell(row=i, column=3, value=pdf_url).font = Font(size=9)
+    set_sheet_link(links.cell(row=i, column=4), tab, f"Go to {tab}")
+    for c in range(1, 5):
+        links.cell(row=i, column=c).border = BORDER
+        links.cell(row=i, column=c).alignment = WRAP
+links.column_dimensions["A"].width = 28
+links.column_dimensions["B"].width = 30
+links.column_dimensions["C"].width = 70
+links.column_dimensions["D"].width = 22
+
+ws = wb.create_sheet("Topic Checklist", 1)
 
 ws["A1"] = "ECON 351 — Exam Topic Tracker"
 ws["A1"].font = Font(bold=True, size=14)
 ws.merge_cells("A1:F1")
+ws["A2"] = "Tip: Use the 'PDF LINKS' tab (first tab) for all study PDFs."
+ws["A2"].font = Font(italic=True, size=10, color="C00000")
+ws.merge_cells("A2:F2")
 
 headers = ["Chapter", "Category", "Questions on Test", "Status", "Notes", "Practice Materials"]
 for c, h in enumerate(headers, 1):
-    cell = ws.cell(row=3, column=c, value=h)
+    cell = ws.cell(row=4, column=c, value=h)
     cell.font = HEADER_FONT
     cell.fill = HEADER_FILL
     cell.alignment = CENTER
     cell.border = BORDER
 
-row = 4
+row = 5
 ch4_total = ch9_total = 0
 for section in EXAM_STRUCTURE:
     ch = section["ch"]
@@ -98,7 +134,10 @@ for section in EXAM_STRUCTURE:
         materials = "Click Download PDF"
 
     base_fill = CH4_FILL if ch == 4 else CH9_FILL
-    row_fill = GREEN_FILL if done else base_fill
+    if cat == "Assumptions / Preferences":
+        row_fill = HIGHLIGHT_FILL
+    else:
+        row_fill = GREEN_FILL if done else base_fill
 
     values = [f"Ch. {ch}", cat, count, status, notes, materials]
     for c, val in enumerate(values, 1):
@@ -154,7 +193,7 @@ ws.column_dimensions["C"].width = 16
 ws.column_dimensions["D"].width = 12
 ws.column_dimensions["E"].width = 28
 ws.column_dimensions["F"].width = 28
-ws.freeze_panes = "A4"
+ws.freeze_panes = "A5"
 
 if not os.path.exists(PDF_PATH):
     subprocess.run(["python3", "/workspace/create_labor_leisure_pdf.py"], check=True)
