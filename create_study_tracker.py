@@ -131,7 +131,7 @@ for section in EXAM_STRUCTURE:
     elif cat == "Assumptions / Preferences":
         pdf_cell = ws.cell(row=row, column=6)
         pdf_cell.hyperlink = "#'Preferences PDF'!A1"
-        pdf_cell.value = "Go to embedded PDF tab"
+        pdf_cell.value = "Open Assumptions & Preferences PDF"
         pdf_cell.font = LINK_FONT
         pdf_cell.fill = row_fill
         pdf_cell.border = BORDER
@@ -191,6 +191,7 @@ add_pdf_pages_sheet(wb, PDF_PATH, sheet_name="Labor-Leisure PDF")
 add_pdf_pages_sheet(wb, DIV_PDF_PATH, sheet_name="Diversification PDF")
 add_pdf_pages_sheet(wb, MU_PDF_PATH, sheet_name="Marginal Utility PDF")
 add_pdf_pages_sheet(wb, PREF_PDF_PATH, sheet_name="Preferences PDF")
+wb["Preferences PDF"]["A1"] = "Assumptions & Preferences Problems (full PDF)"
 wb.save(OUT)
 package_pdf_in_xlsx(OUT, PDF_PATH, internal_name="Labor_Leisure_Problems.pdf")
 package_pdf_in_xlsx(OUT, DIV_PDF_PATH, internal_name="Diversification_Variance_Problems.pdf")
