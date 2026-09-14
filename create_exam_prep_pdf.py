@@ -150,6 +150,21 @@ def sample_q31_shots(tag="Q031"):
     ]
 
 
+def sample_q41_shots(tag="Q041"):
+    return [column_crop("S4", 11, "Question 41", "Question 42", "R", tag)]
+
+
+def sample_q42_shots(tag="Q042"):
+    return [column_crop("S4", 11, "Question 42", None, "R", tag)]
+
+
+def mock_q25_shots(tag="Q025_mock"):
+    return merge_images(
+        lambda: pdf_crop("MOCK", 5, "Question 24", "Question 25", f"{tag}_setup"),
+        lambda: pdf_crop("MOCK", 5, "Question 25", None, tag),
+    )()
+
+
 def y_of(pdf_key, page, label):
     hits = pymupdf.open(PDFS[pdf_key])[page - 1].search_for(label)
     return hits[0].y0 if hits else None
@@ -209,14 +224,11 @@ def bank_images_map():
         "Q019": [render_page("MOCK", 4, "Q019")],
         "Q021": [("text", ["Maria: 16 hrs/day, w=$20, V=$80, U=c^0.5 l^0.5. Find l*, L*, c*.", "(Course-style)"])],
         "Q022": [("text", ["Same setup, w=$30. Find l*, L*, c*. More or less work?", "(Course-style)"])],
-        "Q023": [("text", ["Contract 1: $10M today + $90M future. Contract 2: $42M + $54M. r=0.20. Cheaper PV?", "HW1 Ex 5.1"])],
-        "Q024": lambda: hw_crop("HW1", 2, "Exercise 5", None, "Q024"),
-        "Q025": [render_page("S4", 11, "Q025"), render_page("S4", 12, "Q025b")],
+        "Q023": lambda: hw_crop("HW1", 2, "5.1", "5.2", "Q023"),
+        "Q024": lambda: hw_crop("HW1", 2, "5.3", "5.5", "Q024"),
+        "Q025": lambda: sample_q41_shots("Q025"),
         "Q026": lambda: pdf_crop("MOCK", 5, "Question 24", "Question 25", "Q026"),
-        "Q027": lambda: merge_images(
-            lambda: pdf_crop("MOCK", 5, "Question 24", "Question 25", "Q027_setup"),
-            lambda: pdf_crop("MOCK", 5, "Question 25", None, "Q027"),
-        )(),
+        "Q027": lambda: mock_q25_shots("Q027"),
         "Q028": lambda: hw_crop("HW1", 2, "Exercise 4", "Exercise 5", "Q028"),
         "Q029": [render_page("S4", 10, "Q029")],
         "Q030": [render_page("S4", 10, "Q030")],

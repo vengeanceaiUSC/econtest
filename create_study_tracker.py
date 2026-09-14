@@ -15,6 +15,7 @@ PDF_PATH = "/workspace/Labor_Leisure_Problems.pdf"
 DIV_PDF_PATH = "/workspace/Diversification_Variance_Problems.pdf"
 MU_PDF_PATH = "/workspace/Marginal_Utility_Guide.pdf"
 PREF_PDF_PATH = "/workspace/Assumptions_Preferences_Problems.pdf"
+IT_PDF_PATH = "/workspace/Intertemporal_Consumption_Problems.pdf"
 
 PDF_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Labor_Leisure_Problems.pdf"
 LL_XLSX_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Labor_Leisure_Problems.xlsx"
@@ -24,6 +25,8 @@ MU_PDF_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-
 MU_XLSX_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Marginal_Utility_Guide.xlsx"
 PREF_PDF_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Assumptions_Preferences_Problems.pdf"
 PREF_XLSX_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Assumptions_Preferences_Problems.xlsx"
+IT_PDF_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Intertemporal_Consumption_Problems.pdf"
+IT_XLSX_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Intertemporal_Consumption_Problems.xlsx"
 
 SKIP_GREEN = {"Labor-Leisure", "Diversification"}
 
@@ -65,6 +68,7 @@ def add_material_links(ws, row, row_fill, sheet_name, pdf_url, pdf_label):
 
 PDF_LINKS = [
     ("Assumptions & Preferences", PREF_PDF_URL, PREF_XLSX_URL, "Preferences PDF"),
+    ("Intertemporal Consumption", IT_PDF_URL, IT_XLSX_URL, "Intertemporal PDF"),
     ("Labor-Leisure", PDF_URL, LL_XLSX_URL, "Labor-Leisure PDF"),
     ("Diversification & Variance", DIV_PDF_URL, DIV_XLSX_URL, "Diversification PDF"),
     ("Marginal Utility Guide", MU_PDF_URL, MU_XLSX_URL, "Marginal Utility PDF"),
@@ -129,12 +133,12 @@ for section in EXAM_STRUCTURE:
     status = "✓ Done" if done else "— Not yet"
     notes = "" if done else "Still need to practice"
     materials = ""
-    if cat in {"Labor-Leisure", "Diversification", "Risk Attitudes", "Assumptions / Preferences"}:
+    if cat in {"Labor-Leisure", "Diversification", "Risk Attitudes", "Assumptions / Preferences", "Intertemporal Consumption"}:
         notes = "View in workbook tab (col E) or download PDF (col F)"
         materials = "Click Download PDF"
 
     base_fill = CH4_FILL if ch == 4 else CH9_FILL
-    if cat == "Assumptions / Preferences":
+    if cat in {"Assumptions / Preferences", "Intertemporal Consumption"}:
         row_fill = HIGHLIGHT_FILL
     else:
         row_fill = GREEN_FILL if done else base_fill
@@ -156,6 +160,8 @@ for section in EXAM_STRUCTURE:
         add_material_links(ws, row, row_fill, "Marginal Utility PDF", MU_PDF_URL, "Marginal Utility")
     elif cat == "Assumptions / Preferences":
         add_material_links(ws, row, row_fill, "Preferences PDF", PREF_PDF_URL, "Preferences")
+    elif cat == "Intertemporal Consumption":
+        add_material_links(ws, row, row_fill, "Intertemporal PDF", IT_PDF_URL, "Intertemporal")
 
     row += 1
 
@@ -203,14 +209,18 @@ if not os.path.exists(MU_PDF_PATH):
     subprocess.run(["python3", "/workspace/create_marginal_utility_pdf.py"], check=True)
 if not os.path.exists(PREF_PDF_PATH):
     subprocess.run(["python3", "/workspace/create_preferences_pdf.py"], check=True)
+if not os.path.exists(IT_PDF_PATH):
+    subprocess.run(["python3", "/workspace/create_intertemporal_pdf.py"], check=True)
 
 add_pdf_pages_sheet(wb, PDF_PATH, sheet_name="Labor-Leisure PDF", header="Labor-Leisure Problems (screenshot pages)")
 add_pdf_pages_sheet(wb, DIV_PDF_PATH, sheet_name="Diversification PDF", header="Diversification & Variance Problems (screenshot pages)")
 add_pdf_pages_sheet(wb, MU_PDF_PATH, sheet_name="Marginal Utility PDF", header="Marginal Utility Guide (full PDF pages)")
 add_pdf_pages_sheet(wb, PREF_PDF_PATH, sheet_name="Preferences PDF", header="Assumptions & Preferences Problems (screenshot pages)")
+add_pdf_pages_sheet(wb, IT_PDF_PATH, sheet_name="Intertemporal PDF", header="Intertemporal Consumption Problems (screenshot pages)")
 wb.save(OUT)
 package_pdf_in_xlsx(OUT, PDF_PATH, internal_name="Labor_Leisure_Problems.pdf")
 package_pdf_in_xlsx(OUT, DIV_PDF_PATH, internal_name="Diversification_Variance_Problems.pdf")
 package_pdf_in_xlsx(OUT, MU_PDF_PATH, internal_name="Marginal_Utility_Guide.pdf")
 package_pdf_in_xlsx(OUT, PREF_PDF_PATH, internal_name="Assumptions_Preferences_Problems.pdf")
+package_pdf_in_xlsx(OUT, IT_PDF_PATH, internal_name="Intertemporal_Consumption_Problems.pdf")
 print(f"Saved: {OUT} (with embedded study PDFs)")
