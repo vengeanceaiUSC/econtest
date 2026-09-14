@@ -6,6 +6,7 @@ import subprocess
 
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.worksheet.hyperlink import Hyperlink
 from exam_config import EXAM_STRUCTURE
 from excel_pdf_embed import add_pdf_pages_sheet, package_pdf_in_xlsx
 
@@ -39,6 +40,28 @@ CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
 thin = Side(style="thin", color="AAAAAA")
 BORDER = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+
+def set_external_link(cell, url, label):
+    cell.value = label
+    cell.hyperlink = url
+    cell.font = LINK_FONT
+
+
+def set_sheet_link(cell, sheet_name, label, anchor="A1"):
+    cell.value = label
+    cell.hyperlink = Hyperlink(ref=cell.coordinate, location=f"'{sheet_name}'!{anchor}")
+    cell.font = LINK_FONT
+
+
+def add_material_links(ws, row, row_fill, sheet_name, pdf_url, pdf_label):
+    set_external_link(ws.cell(row=row, column=6), pdf_url, f"Download {pdf_label} PDF")
+    ws.cell(row=row, column=6).fill = row_fill
+    ws.cell(row=row, column=6).border = BORDER
+    set_sheet_link(ws.cell(row=row, column=5), sheet_name, f"View in '{sheet_name}' tab")
+    ws.cell(row=row, column=5).fill = row_fill
+    ws.cell(row=row, column=5).border = BORDER
+
+
 wb = Workbook()
 ws = wb.active
 ws.title = "Topic Checklist"
@@ -70,18 +93,9 @@ for section in EXAM_STRUCTURE:
     status = "✓ Done" if done else "— Not yet"
     notes = "" if done else "Still need to practice"
     materials = ""
-    if cat == "Labor-Leisure":
-        notes = "PDF included in this file (Labor-Leisure PDF tab)"
-        materials = "Labor_Leisure_Problems.pdf (embedded)"
-    elif cat == "Diversification":
-        notes = "PDF included in this file (Diversification PDF tab)"
-        materials = "Diversification_Variance_Problems.pdf (embedded)"
-    elif cat == "Risk Attitudes":
-        notes = "PDF included in this file (Marginal Utility PDF tab)"
-        materials = "Marginal_Utility_Guide.pdf (embedded)"
-    elif cat == "Assumptions / Preferences":
-        notes = "PDF included in this file (Preferences PDF tab)"
-        materials = "Assumptions_Preferences_Problems.pdf (embedded)"
+    if cat in {"Labor-Leisure", "Diversification", "Risk Attitudes", "Assumptions / Preferences"}:
+        notes = "View in workbook tab (col E) or download PDF (col F)"
+        materials = "Click Download PDF"
 
     base_fill = CH4_FILL if ch == 4 else CH9_FILL
     row_fill = GREEN_FILL if done else base_fill
@@ -96,49 +110,13 @@ for section in EXAM_STRUCTURE:
             cell.font = CHECK_FONT
 
     if cat == "Labor-Leisure":
-        pdf_cell = ws.cell(row=row, column=6)
-        pdf_cell.hyperlink = "#'Labor-Leisure PDF'!A1"
-        pdf_cell.value = "Go to embedded PDF tab"
-        pdf_cell.font = LINK_FONT
-        pdf_cell.fill = row_fill
-        pdf_cell.border = BORDER
-        note_cell = ws.cell(row=row, column=5)
-        note_cell.hyperlink = LL_XLSX_URL
-        note_cell.value = "Also: full LL workbook (online)"
-        note_cell.font = LINK_FONT
+        add_material_links(ws, row, row_fill, "Labor-Leisure PDF", PDF_URL, "Labor-Leisure")
     elif cat == "Diversification":
-        pdf_cell = ws.cell(row=row, column=6)
-        pdf_cell.hyperlink = "#'Diversification PDF'!A1"
-        pdf_cell.value = "Go to embedded PDF tab"
-        pdf_cell.font = LINK_FONT
-        pdf_cell.fill = row_fill
-        pdf_cell.border = BORDER
-        note_cell = ws.cell(row=row, column=5)
-        note_cell.hyperlink = DIV_XLSX_URL
-        note_cell.value = "Also: full Div/Var workbook (online)"
-        note_cell.font = LINK_FONT
+        add_material_links(ws, row, row_fill, "Diversification PDF", DIV_PDF_URL, "Diversification")
     elif cat == "Risk Attitudes":
-        pdf_cell = ws.cell(row=row, column=6)
-        pdf_cell.hyperlink = "#'Marginal Utility PDF'!A1"
-        pdf_cell.value = "Go to embedded PDF tab"
-        pdf_cell.font = LINK_FONT
-        pdf_cell.fill = row_fill
-        pdf_cell.border = BORDER
-        note_cell = ws.cell(row=row, column=5)
-        note_cell.hyperlink = MU_XLSX_URL
-        note_cell.value = "Also: full MU guide workbook (online)"
-        note_cell.font = LINK_FONT
+        add_material_links(ws, row, row_fill, "Marginal Utility PDF", MU_PDF_URL, "Marginal Utility")
     elif cat == "Assumptions / Preferences":
-        pdf_cell = ws.cell(row=row, column=6)
-        pdf_cell.hyperlink = "#'Preferences PDF'!A1"
-        pdf_cell.value = "Open Assumptions & Preferences PDF"
-        pdf_cell.font = LINK_FONT
-        pdf_cell.fill = row_fill
-        pdf_cell.border = BORDER
-        note_cell = ws.cell(row=row, column=5)
-        note_cell.hyperlink = PREF_XLSX_URL
-        note_cell.value = "Also: full Preferences workbook (online)"
-        note_cell.font = LINK_FONT
+        add_material_links(ws, row, row_fill, "Preferences PDF", PREF_PDF_URL, "Preferences")
 
     row += 1
 
@@ -187,11 +165,10 @@ if not os.path.exists(MU_PDF_PATH):
 if not os.path.exists(PREF_PDF_PATH):
     subprocess.run(["python3", "/workspace/create_preferences_pdf.py"], check=True)
 
-add_pdf_pages_sheet(wb, PDF_PATH, sheet_name="Labor-Leisure PDF")
-add_pdf_pages_sheet(wb, DIV_PDF_PATH, sheet_name="Diversification PDF")
-add_pdf_pages_sheet(wb, MU_PDF_PATH, sheet_name="Marginal Utility PDF")
-add_pdf_pages_sheet(wb, PREF_PDF_PATH, sheet_name="Preferences PDF")
-wb["Preferences PDF"]["A1"] = "Assumptions & Preferences Problems (full PDF)"
+add_pdf_pages_sheet(wb, PDF_PATH, sheet_name="Labor-Leisure PDF", header="Labor-Leisure Problems (screenshot pages)")
+add_pdf_pages_sheet(wb, DIV_PDF_PATH, sheet_name="Diversification PDF", header="Diversification & Variance Problems (screenshot pages)")
+add_pdf_pages_sheet(wb, MU_PDF_PATH, sheet_name="Marginal Utility PDF", header="Marginal Utility Guide (full PDF pages)")
+add_pdf_pages_sheet(wb, PREF_PDF_PATH, sheet_name="Preferences PDF", header="Assumptions & Preferences Problems (screenshot pages)")
 wb.save(OUT)
 package_pdf_in_xlsx(OUT, PDF_PATH, internal_name="Labor_Leisure_Problems.pdf")
 package_pdf_in_xlsx(OUT, DIV_PDF_PATH, internal_name="Diversification_Variance_Problems.pdf")

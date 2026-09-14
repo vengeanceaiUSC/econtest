@@ -10,7 +10,7 @@ from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Font
 
 
-def add_pdf_pages_sheet(wb, pdf_path, sheet_name="PDF (full document)", first=False):
+def add_pdf_pages_sheet(wb, pdf_path, sheet_name="PDF (full document)", first=False, header=None):
     """Render each PDF page as an image on a dedicated worksheet."""
     if not os.path.exists(pdf_path):
         return False
@@ -24,7 +24,7 @@ def add_pdf_pages_sheet(wb, pdf_path, sheet_name="PDF (full document)", first=Fa
         ws = wb.create_sheet(sheet_name)
 
     ws.sheet_view.showGridLines = False
-    ws["A1"] = "Full PDF below (same as Labor_Leisure_Problems.pdf)"
+    ws["A1"] = header or f"Full PDF below ({os.path.basename(pdf_path)})"
     ws["A1"].font = Font(bold=True, size=12)
     row_px = 30  # pixels from top for first page
 
