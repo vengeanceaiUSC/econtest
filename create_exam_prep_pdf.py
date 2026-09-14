@@ -65,16 +65,104 @@ def render_page(pdf_key, page_1based, tag=""):
 def render_crop(pdf_key, page_1based, y0, y1, tag=""):
     doc = pymupdf.open(PDFS[pdf_key])
     page = doc[page_1based - 1]
+    return render_region_crop(pdf_key, page_1based, 0, page.rect.width, y0, y1, tag)
+
+
+def render_region_crop(pdf_key, page_1based, x0, x1, y0, y1, tag=""):
+    """Crop a rectangular region (supports two-column exam layouts)."""
+    doc = pymupdf.open(PDFS[pdf_key])
+    page = doc[page_1based - 1]
     if y1 is None:
         y1 = page.rect.height
     y0, y1 = max(0, y0 - 6), min(page.rect.height, y1)
-    if y1 - y0 < 20:
+    x0, x1 = max(0, x0), min(page.rect.width, x1)
+    if y1 - y0 < 20 or x1 - x0 < 20:
         return render_page(pdf_key, page_1based, tag)
     mat = pymupdf.Matrix(DPI / 72, DPI / 72)
-    pix = page.get_pixmap(matrix=mat, clip=pymupdf.Rect(0, y0, page.rect.width, y1), alpha=False)
+    pix = page.get_pixmap(matrix=mat, clip=pymupdf.Rect(x0, y0, x1, y1), alpha=False)
     path = os.path.join(OUT_DIR, f"{tag}_crop.jpg")
     pix.save(path, jpg_quality=JPEG_QUALITY)
     return path
+
+
+def two_column_question(pdf_key, page, left_y0, end_label_right, tag, right_y0=70):
+    """Crop a question that starts at the bottom-left and continues top-right (two-column PDF)."""
+    doc = pymupdf.open(PDFS[pdf_key])
+    pg = doc[page - 1]
+    mid = pg.rect.width / 2
+    right_y1 = pg.rect.height
+    if end_label_right:
+        hits = [h for h in pg.search_for(end_label_right) if h.x0 >= mid - 10]
+        if hits:
+            right_y1 = min(h.y0 for h in hits)
+    return [
+        render_region_crop(pdf_key, page, 0, mid, left_y0, None, f"{tag}_L"),
+        render_region_crop(pdf_key, page, mid, pg.rect.width, right_y0, right_y1, f"{tag}_R"),
+    ]
+
+
+def sample_q22_shots(tag="Q054"):
+    return two_column_question("S9", 7, left_y0=620, end_label_right="Question 23", tag=tag)
+
+
+def mock_q29_shots(tag="Q055"):
+    return two_column_question("MOCK", 11, left_y0=592, end_label_right="Question 30", tag=tag)
+
+
+def column_crop(pdf_key, page, start, end, column, tag, y0_override=None, y1_override=None):
+    """Crop a region in the left or right column of a two-column exam page."""
+    doc = pymupdf.open(PDFS[pdf_key])
+    pg = doc[page - 1]
+    mid = pg.rect.width / 2
+    y0 = y0_override if y0_override is not None else (y_of(pdf_key, page, start) if start else 0)
+    if y0 is None:
+        y0 = 0
+    if y1_override is not None:
+        y1 = y1_override
+    elif end:
+        y1 = y_of(pdf_key, page, end)
+        if y1 is None or y1 <= y0:
+            y1 = pg.rect.height
+    else:
+        y1 = pg.rect.height
+    x0, x1 = (0, mid) if column == "L" else (mid, pg.rect.width)
+    return render_region_crop(pdf_key, page, x0, x1, y0, y1, tag)
+
+
+def sample_q6_shots(tag="Q006"):
+    y7 = y_of("S4", 2, "Question 7")
+    return [
+        column_crop("S4", 2, "Question 6", None, "L", f"{tag}_L"),
+        column_crop("S4", 2, None, None, "R", f"{tag}_R", y0_override=70, y1_override=y7),
+    ]
+
+
+def sample_q9_shots(tag="Q009"):
+    y10 = y_of("S4", 3, "Question 10")
+    return two_column_question("S4", 3, left_y0=620, end_label_right="Question 10", tag=tag)
+
+
+def sample_q31_shots(tag="Q031"):
+    y32 = y_of("S4", 9, "Question 32")
+    return [
+        column_crop("S4", 9, "Question 31", None, "L", f"{tag}_L"),
+        column_crop("S4", 9, None, None, "R", f"{tag}_R", y0_override=70, y1_override=y32),
+    ]
+
+
+def sample_q41_shots(tag="Q041"):
+    return [column_crop("S4", 11, "Question 41", "Question 42", "R", tag)]
+
+
+def sample_q42_shots(tag="Q042"):
+    return [column_crop("S4", 11, "Question 42", None, "R", tag)]
+
+
+def mock_q25_shots(tag="Q025_mock"):
+    return merge_images(
+        lambda: pdf_crop("MOCK", 5, "Question 24", "Question 25", f"{tag}_setup"),
+        lambda: pdf_crop("MOCK", 5, "Question 25", None, tag),
+    )()
 
 
 def y_of(pdf_key, page, label):
@@ -136,14 +224,11 @@ def bank_images_map():
         "Q019": [render_page("MOCK", 4, "Q019")],
         "Q021": [("text", ["Maria: 16 hrs/day, w=$20, V=$80, U=c^0.5 l^0.5. Find l*, L*, c*.", "(Course-style)"])],
         "Q022": [("text", ["Same setup, w=$30. Find l*, L*, c*. More or less work?", "(Course-style)"])],
-        "Q023": [("text", ["Contract 1: $10M today + $90M future. Contract 2: $42M + $54M. r=0.20. Cheaper PV?", "HW1 Ex 5.1"])],
-        "Q024": lambda: hw_crop("HW1", 2, "Exercise 5", None, "Q024"),
-        "Q025": [render_page("S4", 11, "Q025"), render_page("S4", 12, "Q025b")],
+        "Q023": lambda: hw_crop("HW1", 2, "5.1", "5.2", "Q023"),
+        "Q024": lambda: hw_crop("HW1", 2, "5.3", "5.5", "Q024"),
+        "Q025": lambda: sample_q41_shots("Q025"),
         "Q026": lambda: pdf_crop("MOCK", 5, "Question 24", "Question 25", "Q026"),
-        "Q027": lambda: merge_images(
-            lambda: pdf_crop("MOCK", 5, "Question 24", "Question 25", "Q027_setup"),
-            lambda: pdf_crop("MOCK", 5, "Question 25", None, "Q027"),
-        )(),
+        "Q027": lambda: mock_q25_shots("Q027"),
         "Q028": lambda: hw_crop("HW1", 2, "Exercise 4", "Exercise 5", "Q028"),
         "Q029": [render_page("S4", 10, "Q029")],
         "Q030": [render_page("S4", 10, "Q030")],
@@ -179,8 +264,8 @@ def bank_images_map():
         "Q051": lambda: pdf_crop("S9", 6, "Question 20", None, "Q051"),
         "Q052": lambda: pdf_crop("MOCK", 10, "Question 27", None, "Q052"),
         "Q053": lambda: pdf_crop("MOCK", 9, "Question 25", "Question 26", "Q053"),
-        "Q054": [render_page("S9", 7, "Q054"), render_page("S9", 8, "Q054b")],
-        "Q055": [render_page("MOCK", 11, "Q055")],
+        "Q054": lambda: sample_q22_shots("Q054"),
+        "Q055": lambda: mock_q29_shots("Q055"),
     }
 
 
