@@ -13,6 +13,7 @@ OUT = "/workspace/Study_Tracker.xlsx"
 PDF_PATH = "/workspace/Labor_Leisure_Problems.pdf"
 DIV_PDF_PATH = "/workspace/Diversification_Variance_Problems.pdf"
 MU_PDF_PATH = "/workspace/Marginal_Utility_Guide.pdf"
+PREF_PDF_PATH = "/workspace/Assumptions_Preferences_Problems.pdf"
 
 PDF_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Labor_Leisure_Problems.pdf"
 LL_XLSX_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Labor_Leisure_Problems.xlsx"
@@ -20,6 +21,8 @@ DIV_PDF_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam
 DIV_XLSX_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Diversification_Variance_Problems.xlsx"
 MU_PDF_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Marginal_Utility_Guide.pdf"
 MU_XLSX_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Marginal_Utility_Guide.xlsx"
+PREF_PDF_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Assumptions_Preferences_Problems.pdf"
+PREF_XLSX_URL = "https://github.com/vengeanceaiUSC/econtest/releases/download/exam-prep-download/Assumptions_Preferences_Problems.xlsx"
 
 SKIP_GREEN = {"Labor-Leisure", "Diversification"}
 
@@ -76,6 +79,9 @@ for section in EXAM_STRUCTURE:
     elif cat == "Risk Attitudes":
         notes = "PDF included in this file (Marginal Utility PDF tab)"
         materials = "Marginal_Utility_Guide.pdf (embedded)"
+    elif cat == "Assumptions / Preferences":
+        notes = "PDF included in this file (Preferences PDF tab)"
+        materials = "Assumptions_Preferences_Problems.pdf (embedded)"
 
     base_fill = CH4_FILL if ch == 4 else CH9_FILL
     row_fill = GREEN_FILL if done else base_fill
@@ -122,6 +128,17 @@ for section in EXAM_STRUCTURE:
         note_cell.hyperlink = MU_XLSX_URL
         note_cell.value = "Also: full MU guide workbook (online)"
         note_cell.font = LINK_FONT
+    elif cat == "Assumptions / Preferences":
+        pdf_cell = ws.cell(row=row, column=6)
+        pdf_cell.hyperlink = "#'Preferences PDF'!A1"
+        pdf_cell.value = "Go to embedded PDF tab"
+        pdf_cell.font = LINK_FONT
+        pdf_cell.fill = row_fill
+        pdf_cell.border = BORDER
+        note_cell = ws.cell(row=row, column=5)
+        note_cell.hyperlink = PREF_XLSX_URL
+        note_cell.value = "Also: full Preferences workbook (online)"
+        note_cell.font = LINK_FONT
 
     row += 1
 
@@ -167,12 +184,16 @@ if not os.path.exists(DIV_PDF_PATH):
     subprocess.run(["python3", "/workspace/create_diversification_pdf.py"], check=True)
 if not os.path.exists(MU_PDF_PATH):
     subprocess.run(["python3", "/workspace/create_marginal_utility_pdf.py"], check=True)
+if not os.path.exists(PREF_PDF_PATH):
+    subprocess.run(["python3", "/workspace/create_preferences_pdf.py"], check=True)
 
 add_pdf_pages_sheet(wb, PDF_PATH, sheet_name="Labor-Leisure PDF")
 add_pdf_pages_sheet(wb, DIV_PDF_PATH, sheet_name="Diversification PDF")
 add_pdf_pages_sheet(wb, MU_PDF_PATH, sheet_name="Marginal Utility PDF")
+add_pdf_pages_sheet(wb, PREF_PDF_PATH, sheet_name="Preferences PDF")
 wb.save(OUT)
 package_pdf_in_xlsx(OUT, PDF_PATH, internal_name="Labor_Leisure_Problems.pdf")
 package_pdf_in_xlsx(OUT, DIV_PDF_PATH, internal_name="Diversification_Variance_Problems.pdf")
 package_pdf_in_xlsx(OUT, MU_PDF_PATH, internal_name="Marginal_Utility_Guide.pdf")
-print(f"Saved: {OUT} (with embedded Labor-Leisure, Diversification, and Marginal Utility PDFs)")
+package_pdf_in_xlsx(OUT, PREF_PDF_PATH, internal_name="Assumptions_Preferences_Problems.pdf")
+print(f"Saved: {OUT} (with embedded study PDFs)")

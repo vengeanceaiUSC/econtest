@@ -109,6 +109,47 @@ def mock_q29_shots(tag="Q055"):
     return two_column_question("MOCK", 11, left_y0=592, end_label_right="Question 30", tag=tag)
 
 
+def column_crop(pdf_key, page, start, end, column, tag, y0_override=None, y1_override=None):
+    """Crop a region in the left or right column of a two-column exam page."""
+    doc = pymupdf.open(PDFS[pdf_key])
+    pg = doc[page - 1]
+    mid = pg.rect.width / 2
+    y0 = y0_override if y0_override is not None else (y_of(pdf_key, page, start) if start else 0)
+    if y0 is None:
+        y0 = 0
+    if y1_override is not None:
+        y1 = y1_override
+    elif end:
+        y1 = y_of(pdf_key, page, end)
+        if y1 is None or y1 <= y0:
+            y1 = pg.rect.height
+    else:
+        y1 = pg.rect.height
+    x0, x1 = (0, mid) if column == "L" else (mid, pg.rect.width)
+    return render_region_crop(pdf_key, page, x0, x1, y0, y1, tag)
+
+
+def sample_q6_shots(tag="Q006"):
+    y7 = y_of("S4", 2, "Question 7")
+    return [
+        column_crop("S4", 2, "Question 6", None, "L", f"{tag}_L"),
+        column_crop("S4", 2, None, None, "R", f"{tag}_R", y0_override=70, y1_override=y7),
+    ]
+
+
+def sample_q9_shots(tag="Q009"):
+    y10 = y_of("S4", 3, "Question 10")
+    return two_column_question("S4", 3, left_y0=620, end_label_right="Question 10", tag=tag)
+
+
+def sample_q31_shots(tag="Q031"):
+    y32 = y_of("S4", 9, "Question 32")
+    return [
+        column_crop("S4", 9, "Question 31", None, "L", f"{tag}_L"),
+        column_crop("S4", 9, None, None, "R", f"{tag}_R", y0_override=70, y1_override=y32),
+    ]
+
+
 def y_of(pdf_key, page, label):
     hits = pymupdf.open(PDFS[pdf_key])[page - 1].search_for(label)
     return hits[0].y0 if hits else None
